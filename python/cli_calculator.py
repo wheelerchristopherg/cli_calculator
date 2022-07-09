@@ -132,27 +132,55 @@ class BinaryTree:
 
 
 class TreeBuilder:
-  def __init__(self, tokens):
-    self.sub_tree_map = {}
-    self.tokens = tokens
+  def __init__(self):
+    self.paren_substitutions = {}
+    self.tree = None
 
-  def find_root(self, tokens):
+  def _find_root(self, tokens):
     root_index = 0
     for i, t in enumerate(tokens):
       if t.weight >= tokens[root_index].weight:
         root_index = i
     return root_index
-  
-  
-  def build_tree(self, tokens):
+
+  def _substitute_paren_expressions(self, tokens):
+    if OpenParen in tokens:
+      if CloseParen not in tokens:
+        raise Exception("Invalid Expression: Missing )")
+      first = tokens.index(OpenParen)
+      last = len(tokens) - list(reversed(tokens)).index(CloseParen)
+      sub_expression = tokens[first+1:last-1]
+      next_var = f"p{len(self.paren_substitutions)}"
+      self.paren_substitutions[next_var] = None
+      self.paren_substitutions[next_var] = self._build_tree(sub_expression)
+      return tokens[:first] + [Variable(next_var)] + tokens[last:]
+      
+    elif CloseParen in tokens:
+      raise Exception("Invalid Expression: Unexpected )")
+    return tokens
+
+  def _build_tree(self, tokens):
     if not tokens:
       raise Exception("Invalid Expression")
-    elif len(tokens) == 1:
+
+    tokens = self._substitute_paren_expressions(tokens)
+
+    if len(tokens) == 1:
       return BinaryTree(tokens[0])
-    root_index = find_root(tokens)
-    left_node = build_tree(tokens[:root_index])
-    right_node = build_tree(tokens[root_index+1:])
+
+    root_index = self._find_root(tokens)
+    left_node = self._build_tree(tokens[:root_index])
+    right_node = self._build_tree(tokens[root_index+1:])
     return BinaryTree(tokens[root_index], left_node, right_node)
+
+  def build_tree(self, tokens):
+    self.tree = self._build_tree(tokens)
+
+  def get_tree(self):
+    return self.tree
+
+  def get_env(self):
+    return self.paren_substitutions
 
 
 def token_factory(text):
@@ -167,9 +195,9 @@ def token_factory(text):
   elif text == "-":
     return Subtract()
   elif text == "(":
-    return OpenParen()
+    return OpenParen
   elif text == ")":
-    return CloseParen()
+    return CloseParen
   elif text != "":
     return Variable(text)
   raise Exception("Invalid token")
@@ -180,25 +208,6 @@ def parse_tokens(expression):
   for t in expression.split():
     tokens.append(token_factory(t))
   return tokens
-
-
-def find_root(tokens):
-  root_index = 0
-  for i, t in enumerate(tokens):
-    if t.weight >= tokens[root_index].weight:
-      root_index = i
-  return root_index
-
-
-def build_tree(tokens):
-  if not tokens:
-    raise Exception("Invalid Expression")
-  elif len(tokens) == 1:
-    return BinaryTree(tokens[0])
-  root_index = find_root(tokens)
-  left_node = build_tree(tokens[:root_index])
-  right_node = build_tree(tokens[root_index+1:])
-  return BinaryTree(tokens[root_index], left_node, right_node)
 
 
 def build_env_from_history(history):
@@ -212,11 +221,13 @@ def main():
     if expression == "":
       break
 
-    #expression = "123.321 + 112 - 759 * 7 / 3"
     env = build_env_from_history(history)
     try:
       tokens = parse_tokens(expression)
-      tree = build_tree(tokens)
+      tree_builder = TreeBuilder()
+      tree_builder.build_tree(tokens)
+      tree = tree_builder.get_tree()
+      env.update(tree_builder.get_env())
       result = tree.evaluate(env)
     except Exception as e:
       print(e)
