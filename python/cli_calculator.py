@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import re
 
+
 class Token:
   def __init__(self):
     self.value = ""
@@ -10,6 +11,7 @@ class Token:
 
   def __repr__(self):
     return self.__str__()
+
 
 class Number(Token):
   weight = 0
@@ -25,6 +27,7 @@ class Number(Token):
   def evaluate(self):
     return float(self.value)
 
+
 class Multiply(Token):
   weight = 1
   def __init__(self):
@@ -32,6 +35,7 @@ class Multiply(Token):
 
   def evaluate(self, left, right):
     return left * right
+
 
 class Divide(Token):
   weight = 1
@@ -41,6 +45,7 @@ class Divide(Token):
   def evaluate(self, left, right):
     return left / right
 
+
 class Add(Token):
   weight = 2
   def __init__(self):
@@ -48,6 +53,7 @@ class Add(Token):
 
   def evaluate(self, left, right):
     return left + right
+
 
 class Subtract(Token):
   weight = 2
@@ -57,7 +63,8 @@ class Subtract(Token):
   def evaluate(self, left, right):
     return left - right
 
-class BinNode:
+
+class BinaryTree:
   def __init__(self, token, left=None, right=None):
     self.token = token
     self.left = left
@@ -86,6 +93,7 @@ class BinNode:
     self._check_valid_operation()
     return self.token.evaluate(self.left.evaluate(), self.right.evaluate())
 
+
 def token_factory(text, env):
   if text in env:
     return Number(env[text])
@@ -99,14 +107,15 @@ def token_factory(text, env):
     return Add()
   elif text == "-":
     return Subtract()
-  
   raise Exception("Invalid token")
+
 
 def parse_tokens(expression, env):
   tokens = list()
   for t in expression.split():
     tokens.append(token_factory(t, env))
   return tokens
+
 
 def find_root(tokens):
   root_index = 0
@@ -115,31 +124,31 @@ def find_root(tokens):
       root_index = i
   return root_index
 
+
 def build_tree(tokens):
   if not tokens:
     raise Exception("Invalid Expression")
   elif len(tokens) == 1:
-    return BinNode(tokens[0])
+    return BinaryTree(tokens[0])
   root_index = find_root(tokens)
-  left_tokens = tokens[:root_index]
-  right_tokens = tokens[root_index+1:]
-  left_node = build_tree(left_tokens)
-  right_node = build_tree(right_tokens)
-  return BinNode(tokens[root_index], left_node, right_node)
+  left_node = build_tree(tokens[:root_index])
+  right_node = build_tree(tokens[root_index+1:])
+  return BinaryTree(tokens[root_index], left_node, right_node)
+
 
 def evaluate_tree(tree):
   if not tree:
     raise Exception("Invalid expression")
-
   if isinstance(tree.token, Number):
     if tree.left or tree.right:
       raise Exception("Invalid expression")
     return tree.token.get_decimal()
-  
   return tree.evaluate()
+
 
 def build_env_from_history(history):
   return {f"x{i}" : f"{value}" for i, value in enumerate(history)}  
+
 
 def main():
   history = []
@@ -160,5 +169,7 @@ def main():
     history.append(result)
     print(f"x{len(history)-1} = {result}")
 
+
 if __name__ == "__main__":
   main()
+
