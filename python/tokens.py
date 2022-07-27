@@ -61,15 +61,6 @@ class Integer(Number):
     return int(self.value)
 
 
-class Operator(Token):
-  weight = -1
-  def __init__(self):
-    self.value = "*"
-
-  def evaluate(self, left, right):
-    return left * right
-
-
 class Float(Number):
   weight = 0
   def __init__(self, value):
@@ -77,6 +68,15 @@ class Float(Number):
 
   def evaluate(self):
     return float(self.value)
+    
+
+class Operator(Token):
+  weight = -1
+  def __init__(self):
+    self.value = "*"
+
+  def evaluate(self, left, right):
+    return left * right
 
 
 class Multiply(Operator):
