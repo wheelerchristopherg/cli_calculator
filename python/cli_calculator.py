@@ -1,93 +1,7 @@
 #!/usr/bin/env python
 import re
-
-
-class Token:
-  def __init__(self):
-    self.value = ""
-
-  def __str__(self):
-    return self.value
-
-  def __repr__(self):
-    return self.__str__()
-
-
-class OpenParen(Token):
-  weight = 0
-  def __init__(self):
-    self.value = "("
-
-
-class CloseParen(Token):
-  weight = 0
-  def __init__(self):
-    self.value = ")"
-
-
-class Variable(Token):
-  weight = 0
-  def __init__(self, value):
-    self.value = value
-
-  def evaluate(self, env):
-    if self.value in env:
-      result = env[self.value]
-      if isinstance(result, BinaryTree):
-        return result.evaluate(env)
-      return result
-    raise Exception(f"Invalid Variable: {self.value}")
-
-
-class Number(Token):
-  weight = 0
-  def __init__(self, value):
-    self.value = value
-
-  @staticmethod
-  def is_number(text):
-    if re.match(r'^-?\d+(\.\d+)?$', text):
-      return True
-    return False
-
-  def evaluate(self):
-    return float(self.value)
-
-
-class Multiply(Token):
-  weight = 1
-  def __init__(self):
-    self.value = "*"
-
-  def evaluate(self, left, right):
-    return left * right
-
-
-class Divide(Token):
-  weight = 1
-  def __init__(self):
-    self.value = "/"
-
-  def evaluate(self, left, right):
-    return left / right
-
-
-class Add(Token):
-  weight = 2
-  def __init__(self):
-    self.value = "+"
-
-  def evaluate(self, left, right):
-    return left + right
-
-
-class Subtract(Token):
-  weight = 2
-  def __init__(self):
-    self.value = "-"
-
-  def evaluate(self, left, right):
-    return left - right
+import tokens
+import lexical_analyzer
 
 
 class BinaryTree:
@@ -103,14 +17,14 @@ class BinaryTree:
     return self.__str__()
 
   def _check_valid_number_token(self):
-    if isinstance(self.token, Number): 
+    if isinstance(self.token, tokens.Integer) or isinstance(self.token, tokens.Float): 
       if self.left or self.right:
         raise Exception("Invalid Tree")
       return self.token.evaluate()
     return None
 
   def _check_valid_var_token(self, env):
-    if isinstance(self.token, Variable): 
+    if isinstance(self.token, tokens.Variable): 
       if self.left or self.right:
         raise Exception("Invalid Tree")
       return self.token.evaluate(env)
@@ -143,38 +57,38 @@ class TreeBuilder:
         root_index = i
     return root_index
 
-  def _substitute_paren_expressions(self, tokens):
-    if OpenParen in tokens:
-      if CloseParen not in tokens:
+  def _substitute_paren_expressions(self, _tokens):
+    if tokens.OpenParen in _tokens:
+      if tokens.CloseParen not in _tokens:
         raise Exception("Invalid Expression: Missing )")
-      first = tokens.index(OpenParen)
-      last = len(tokens) - list(reversed(tokens)).index(CloseParen)
-      sub_expression = tokens[first+1:last-1]
+      first = _tokens.index(OpenParen)
+      last = len(_tokens) - list(reversed(_tokens)).index(tokens.CloseParen)
+      sub_expression = _tokens[first+1:last-1]
       next_var = f"p{len(self.paren_substitutions)}"
       self.paren_substitutions[next_var] = None
       self.paren_substitutions[next_var] = self._build_tree(sub_expression)
-      return tokens[:first] + [Variable(next_var)] + tokens[last:]
+      return _tokens[:first] + [tokens.Variable(next_var)] + _tokens[last:]
       
-    elif CloseParen in tokens:
+    elif tokens.CloseParen in _tokens:
       raise Exception("Invalid Expression: Unexpected )")
-    return tokens
+    return _tokens
 
-  def _build_tree(self, tokens):
-    if not tokens:
+  def _build_tree(self, _tokens):
+    if not _tokens:
       raise Exception("Invalid Expression")
 
-    tokens = self._substitute_paren_expressions(tokens)
+    _tokens = self._substitute_paren_expressions(_tokens)
 
-    if len(tokens) == 1:
-      return BinaryTree(tokens[0])
+    if len(_tokens) == 1:
+      return BinaryTree(_tokens[0])
 
-    root_index = self._find_root(tokens)
-    left_node = self._build_tree(tokens[:root_index])
-    right_node = self._build_tree(tokens[root_index+1:])
-    return BinaryTree(tokens[root_index], left_node, right_node)
+    root_index = self._find_root(_tokens)
+    left_node = self._build_tree(_tokens[:root_index])
+    right_node = self._build_tree(_tokens[root_index+1:])
+    return BinaryTree(_tokens[root_index], left_node, right_node)
 
-  def build_tree(self, tokens):
-    self.tree = self._build_tree(tokens)
+  def build_tree(self, _tokens):
+    self.tree = self._build_tree(_tokens)
 
   def get_tree(self):
     return self.tree
@@ -183,31 +97,31 @@ class TreeBuilder:
     return self.paren_substitutions
 
 
-def token_factory(text):
-  if Number.is_number(text):
-    return Number(text)
-  elif text == "*":
-    return Multiply()
-  elif text == "/":
-    return Divide()
-  elif text == "+":
-    return Add()
-  elif text == "-":
-    return Subtract()
-  elif text == "(":
-    return OpenParen
-  elif text == ")":
-    return CloseParen
-  elif text != "":
-    return Variable(text)
-  raise Exception("Invalid token")
+#def token_factory(text):
+#  if Number.is_number(text):
+#    return Number(text)
+#  elif text == "*":
+#    return Multiply()
+#  elif text == "/":
+#    return Divide()
+#  elif text == "+":
+#    return Add()
+#  elif text == "-":
+#    return Subtract()
+#  elif text == "(":
+#    return OpenParen
+#  elif text == ")":
+#    return CloseParen
+#  elif text != "":
+#    return Variable(text)
+#  raise Exception("Invalid token")
 
 
-def parse_tokens(expression):
-  tokens = list()
-  for t in expression.split():
-    tokens.append(token_factory(t))
-  return tokens
+#def parse_tokens(expression):
+#  tokens = list()
+#  for t in expression.split():
+#    tokens.append(token_factory(t))
+#  return tokens
 
 
 def build_env_from_history(history):
@@ -217,13 +131,13 @@ def build_env_from_history(history):
 def main():
   history = []
   while True:
-    expression = input("> ")
-    if expression == "":
-      break
-
-    env = build_env_from_history(history)
     try:
-      tokens = parse_tokens(expression)
+      expression = input("> ")
+      if expression == "":
+        break
+
+      env = build_env_from_history(history)
+      tokens = lexical_analyzer.parse_tokens(expression)
       tree_builder = TreeBuilder()
       tree_builder.build_tree(tokens)
       tree = tree_builder.get_tree()
