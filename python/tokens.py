@@ -1,3 +1,6 @@
+import binary_tree
+
+
 class Token:
   def __init__(self):
     self.value = ""
@@ -9,13 +12,18 @@ class Token:
     return self.__str__()
 
 
-class OpenParen(Token):
+class Paren(Token):
+  def __init(self):
+    self.value = ""
+
+
+class OpenParen(Paren):
   weight = 0
   def __init__(self):
     self.value = "("
 
 
-class CloseParen(Token):
+class CloseParen(Paren):
   weight = 0
   def __init__(self):
     self.value = ")"
@@ -29,28 +37,22 @@ class Variable(Token):
   def evaluate(self, env):
     if self.value in env:
       result = env[self.value]
-      if isinstance(result, BinaryTree):
+      if isinstance(result, binary_tree.BinaryTree):
         return result.evaluate(env)
       return result
     raise Exception(f"Invalid Variable: {self.value}")
 
 
 class Number(Token):
-  weight = 0
+  weight = -1
   def __init__(self, value):
     self.value = value
 
-  @staticmethod
-  def is_number(text):
-    if re.match(r'^-?\d+(\.\d+)?$', text):
-      return True
-    return False
-
   def evaluate(self):
-    return float(self.value)
+    raise Exception("Cannot evaluate token")
 
 
-class Integer(Token):
+class Integer(Number):
   weight = 0
   def __init__(self, value):
     self.value = value
@@ -59,7 +61,16 @@ class Integer(Token):
     return int(self.value)
 
 
-class Float(Token):
+class Operator(Token):
+  weight = -1
+  def __init__(self):
+    self.value = "*"
+
+  def evaluate(self, left, right):
+    return left * right
+
+
+class Float(Number):
   weight = 0
   def __init__(self, value):
     self.value = value
@@ -68,7 +79,7 @@ class Float(Token):
     return float(self.value)
 
 
-class Multiply(Token):
+class Multiply(Operator):
   weight = 1
   def __init__(self):
     self.value = "*"
@@ -77,7 +88,7 @@ class Multiply(Token):
     return left * right
 
 
-class Divide(Token):
+class Divide(Operator):
   weight = 1
   def __init__(self):
     self.value = "/"
@@ -86,7 +97,7 @@ class Divide(Token):
     return left / right
 
 
-class Plus(Token):
+class Plus(Operator):
   weight = 2
   def __init__(self):
     self.value = "+"
@@ -95,13 +106,14 @@ class Plus(Token):
     return left + right
 
 
-class Minus(Token):
+class Minus(Operator):
   weight = 2
   def __init__(self):
     self.value = "-"
 
   def evaluate(self, left, right):
     return left - right
+
 
 class EOL(Token):
   weight = -1
@@ -111,6 +123,7 @@ class EOL(Token):
   def evaluate(self):
     raise Exception("Cannot evaluate token")
 
+
 class WhiteSpace(Token):
   weight = -1
   def __init__(self):
@@ -118,3 +131,4 @@ class WhiteSpace(Token):
 
   def evaluate(self):
     raise Exception("Cannot evaluate token")
+

@@ -40,85 +40,96 @@ class State:
     if character:
       raise UnexpectedCharacter(character)
     raise NoTokenMatched()
-         
 
-def initialize_state_machine():
-  states = []
-  states.append(State())
-  states.append(State(tokens.Integer))
-  states.append(State())
-  states.append(State(tokens.OpenParen))
-  states.append(State(tokens.CloseParen))
-  states.append(State(tokens.Minus))
-  states.append(State(tokens.Plus))
-  states.append(State(tokens.Multiply))
-  states.append(State(tokens.Divide))
-  states.append(State(tokens.Float))
-  states.append(State(tokens.EOL))
-  states.append(State(tokens.WhiteSpace))
+  @staticmethod
+  def get_character_type(character):
+    if character.isdigit():
+      return DIGIT
+    elif character.isalpha():
+      return ALPHA
+    return None
 
-  states[0].add_transition(DIGIT, states[1])
-  states[0].add_transition('.', states[2])
-  states[0].add_transition('(', states[3])
-  states[0].add_transition(')', states[4])
-  states[0].add_transition('-', states[5])
-  states[0].add_transition('+', states[6])
-  states[0].add_transition('*', states[7])
-  states[0].add_transition('/', states[8])
-  states[0].add_transition('\n', states[10])
-  states[0].add_transition(' ', states[11])
-  states[0].add_transition('\t', states[11])
 
-  states[1].add_transition(DIGIT, states[1])
-  states[1].add_transition('.', states[2])
+class TokenParser:
+  def __init__(self):
+    self.initialize_state_machine()
 
-  states[2].add_transition(DIGIT, states[9])
+  def initialize_state_machine(self):
+    self.states = []
+    self.states.append(State())
+    self.states.append(State(tokens.Integer))
+    self.states.append(State())
+    self.states.append(State(tokens.OpenParen))
+    self.states.append(State(tokens.CloseParen))
+    self.states.append(State(tokens.Minus))
+    self.states.append(State(tokens.Plus))
+    self.states.append(State(tokens.Multiply))
+    self.states.append(State(tokens.Divide))
+    self.states.append(State(tokens.Float))
+    self.states.append(State(tokens.EOL))
+    self.states.append(State(tokens.WhiteSpace))
   
-  states[9].add_transition(DIGIT, states[9])
-
-  states[11].add_transition(' ', states[11])
-  states[11].add_transition('\t', states[11])
-
-  return states
+    self.states[0].add_transition(DIGIT, self.states[1])
+    self.states[0].add_transition('.', self.states[2])
+    self.states[0].add_transition('(', self.states[3])
+    self.states[0].add_transition(')', self.states[4])
+    self.states[0].add_transition('-', self.states[5])
+    self.states[0].add_transition('+', self.states[6])
+    self.states[0].add_transition('*', self.states[7])
+    self.states[0].add_transition('/', self.states[8])
+    self.states[0].add_transition('\n', self.states[10])
+    self.states[0].add_transition(' ', self.states[11])
+    self.states[0].add_transition('\t', self.states[11])
   
-
-def parse_tokens(_input):
-  text = _input + "\n"
-  states = initialize_state_machine()
-  current_state = states[0]
-  token_start = 0
-  char_pos = 0
-  token_list = []
-
-  while char_pos < len(text):
-    value = None
-    try:
-      value = current_state.next_state(text[char_pos])
-    except UnexpectedCharacter as e:
-      error_position = " " * char_pos
-      error_position += "^"
-      mono_char_text = text.replace('\t', ' ')
-      raise UnexpectedCharacter(f"Unexpected character {e.args[0]} at position {char_pos}\n{mono_char_text[:-1]}\n{error_position}")
-    except NoTokenMatched as e:
-      raise e
-
-    if value is tokens.EOL:
-      token_list.append(value())
-      break
-
-    if type(value) is type(tokens.Token) and issubclass(value, tokens.Token):
-      current_state = states[0]
-      token_text = text[token_start:char_pos]
-      new_token = None
-      if value is tokens.Integer or value is tokens.Float:
-        new_token = value(token_text)
-      else:
-        new_token = value()
-      token_list.append(new_token)
-      token_start = char_pos
-    elif isinstance(value, State):
-      current_state = value
-      char_pos += 1 
+    self.states[1].add_transition(DIGIT, self.states[1])
+    self.states[1].add_transition('.', self.states[2])
   
-  return list(filter(lambda x: not isinstance(x, tokens.WhiteSpace), token_list))
+    self.states[2].add_transition(DIGIT, self.states[9])
+    
+    self.states[9].add_transition(DIGIT, self.states[9])
+  
+    self.states[11].add_transition(' ', self.states[11])
+    self.states[11].add_transition('\t', self.states[11])
+
+  def parse(self, _input):
+    text = _input + "\n"
+    current_state = self.states[0]
+    token_start = 0
+    char_pos = 0
+    token_list = []
+  
+    while char_pos < len(text):
+      value = None
+      try:
+        value = current_state.next_state(text[char_pos])
+      except UnexpectedCharacter as e:
+        error_position = " " * char_pos
+        error_position += "^"
+        mono_char_text = text.replace('\t', ' ')
+        raise UnexpectedCharacter(f"Unexpected character {e.args[0]} at position {char_pos}\n{mono_char_text[:-1]}\n{error_position}")
+      except NoTokenMatched as e:
+        raise e
+  
+      if value is tokens.EOL:
+        token_list.append(value())
+        break
+  
+      if type(value) is type(tokens.Token) and issubclass(value, tokens.Token):
+        current_state = self.states[0]
+        token_text = text[token_start:char_pos]
+        new_token = None
+        if issubclass(value, tokens.Number):
+          new_token = value(token_text)
+        elif issubclass(value, tokens.Paren):
+          new_token = value
+        else:
+          new_token = value()
+        if not isinstance(new_token, tokens.WhiteSpace):
+          token_list.append(new_token)
+        token_start = char_pos
+      elif isinstance(value, State):
+        current_state = value
+        char_pos += 1 
+    
+    return token_list
     
