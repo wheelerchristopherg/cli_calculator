@@ -11,19 +11,17 @@ def build_env_from_history(history):
 def preprocess_tokens(_tokens):
     i = 0
     while i < len(_tokens) - 1:
-        if (
-            isinstance(_tokens[i], tokens.Minus)
-            and (
-                i == 0
-                or (not isinstance(_tokens[i - 1], (tokens.Number, tokens.CloseParen)))
-            )
-            and isinstance(
-                _tokens[i + 1], (tokens.Number, tokens.Variable, tokens.OpenParen)
-            )
+        if isinstance(_tokens[i], tokens.Minus) and (
+            i == 0
+            or (not isinstance(_tokens[i - 1], (tokens.Number, tokens.CloseParen)))
         ):
-            _tokens.pop(i)
-            _tokens.insert(i, tokens.Multiply())
-            _tokens.insert(i, tokens.Integer("-1"))
+            if isinstance(_tokens[i + 1], (tokens.Variable, tokens.OpenParen)):
+                _tokens.pop(i)
+                _tokens.insert(i, tokens.Multiply())
+                _tokens.insert(i, tokens.Integer("-1"))
+            elif isinstance(_tokens[i + 1], tokens.Number):
+                _tokens.pop(i)
+                _tokens[i].value = "-" + _tokens[i].value
         elif isinstance(
             _tokens[i], (tokens.Number, tokens.Variable, tokens.CloseParen)
         ) and isinstance(_tokens[i + 1], tokens.OpenParen):
