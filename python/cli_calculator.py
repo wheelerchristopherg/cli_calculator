@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import re
-import tokens
 import lexical_analyzer
 import binary_tree
 
@@ -19,13 +17,14 @@ def main():
         break
 
       env = build_env_from_history(history)
-      tokens = parser.parse(expression)
+      _tokens = parser.parse(expression)
       tree_builder = binary_tree.TreeBuilder()
-      tree_builder.build_tree(tokens)
+      tree_builder.build_tree(_tokens)
       tree = tree_builder.get_tree()
       env.update(tree_builder.get_env())
       result = tree.evaluate(env)
     except Exception as e:
+      raise e
       print(e)
       continue
     history.append(result)

@@ -55,33 +55,42 @@ class TreeBuilder:
     return root_index
 
   def _substitute_paren_expressions(self, _tokens):
-    if tokens.OpenParen in _tokens:
-      if tokens.CloseParen not in _tokens:
-        raise Exception("Invalid Expression: Missing )")
-      first = _tokens.index(tokens.OpenParen)
-      last = len(_tokens) - list(reversed(_tokens)).index(tokens.CloseParen)
-      sub_expression = _tokens[first+1:last-1]
-      next_var = f"p{len(self.paren_substitutions)}"
-      self.paren_substitutions[next_var] = None
-      self.paren_substitutions[next_var] = self._build_tree(sub_expression)
-      return _tokens[:first] + [tokens.Variable(next_var)] + _tokens[last:]
-      
-    elif tokens.CloseParen in _tokens:
-      raise Exception("Invalid Expression: Unexpected )")
+    paren_stack = []
+    substitution_counter = 0
+    i = 0
+    while i < len(_tokens):
+      token = _tokens[i]
+      if isinstance(token, tokens.OpenParen):
+        paren_stack.append(i)
+        i += 1
+      elif isinstance(token, tokens.CloseParen):
+        first = paren_stack.pop()
+        sub_expression = _tokens[first:i+1]
+        variable = tokens.Variable(f"p{substitution_counter}")
+        for _ in range(len(sub_expression)):
+          _tokens.pop(first)
+        _tokens.insert(first, variable)
+        self.paren_substitutions[f"p{substitution_counter}"] = self._build_tree(sub_expression[1:-1], sub_parens=False)
+        substitution_counter += 1
+        i = first + 1
+      else:
+        i += 1
     return _tokens
 
-  def _build_tree(self, _tokens):
+
+  def _build_tree(self, _tokens, sub_parens=True):
     if not _tokens:
       raise Exception("Invalid Expression")
 
-    _tokens = self._substitute_paren_expressions(_tokens)
+    if sub_parens:
+      _tokens = self._substitute_paren_expressions(_tokens)
 
     if len(_tokens) == 1:
       return BinaryTree(_tokens[0])
 
     root_index = self._find_root(_tokens)
-    left_node = self._build_tree(_tokens[:root_index])
-    right_node = self._build_tree(_tokens[root_index+1:])
+    left_node = self._build_tree(_tokens[:root_index], sub_parens)
+    right_node = self._build_tree(_tokens[root_index+1:], sub_parens)
     return BinaryTree(_tokens[root_index], left_node, right_node)
 
   def build_tree(self, _tokens):

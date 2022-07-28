@@ -120,8 +120,6 @@ class TokenParser:
         new_token = None
         if issubclass(value, tokens.Number):
           new_token = value(token_text)
-        elif issubclass(value, tokens.Paren):
-          new_token = value
         else:
           new_token = value()
         if not isinstance(new_token, tokens.WhiteSpace):
