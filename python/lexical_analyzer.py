@@ -68,6 +68,7 @@ class TokenParser:
     self.states.append(State(tokens.Float))
     self.states.append(State(tokens.EOL))
     self.states.append(State(tokens.WhiteSpace))
+    self.states.append(State(tokens.Variable))
   
     self.states[0].add_transition(DIGIT, self.states[1])
     self.states[0].add_transition('.', self.states[2])
@@ -80,6 +81,7 @@ class TokenParser:
     self.states[0].add_transition('\n', self.states[10])
     self.states[0].add_transition(' ', self.states[11])
     self.states[0].add_transition('\t', self.states[11])
+    self.states[0].add_transition(ALPHA, self.states[12])
   
     self.states[1].add_transition(DIGIT, self.states[1])
     self.states[1].add_transition('.', self.states[2])
@@ -90,6 +92,9 @@ class TokenParser:
   
     self.states[11].add_transition(' ', self.states[11])
     self.states[11].add_transition('\t', self.states[11])
+    
+    self.states[12].add_transition(ALPHA, self.states[12])
+    self.states[12].add_transition(DIGIT, self.states[12])
 
   def parse(self, _input):
     text = _input + "\n"
@@ -118,7 +123,7 @@ class TokenParser:
         current_state = self.states[0]
         token_text = text[token_start:char_pos]
         new_token = None
-        if issubclass(value, tokens.Number):
+        if issubclass(value, tokens.Number) or issubclass(value, tokens.Variable):
           new_token = value(token_text)
         else:
           new_token = value()
