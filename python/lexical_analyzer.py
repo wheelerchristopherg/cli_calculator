@@ -82,6 +82,7 @@ class TokenParser:
         self.states[0].add_transition(" ", self.states[11])
         self.states[0].add_transition("\t", self.states[11])
         self.states[0].add_transition(ALPHA, self.states[12])
+        self.states[0].add_transition("_", self.states[12])
 
         self.states[1].add_transition(DIGIT, self.states[1])
         self.states[1].add_transition(".", self.states[2])
@@ -95,6 +96,7 @@ class TokenParser:
 
         self.states[12].add_transition(ALPHA, self.states[12])
         self.states[12].add_transition(DIGIT, self.states[12])
+        self.states[12].add_transition("_", self.states[12])
 
     def parse(self, _input):
         text = _input + "\n"
