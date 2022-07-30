@@ -31,6 +31,7 @@ def preprocess_tokens(_tokens):
 
 
 def main():
+    global_env = {"g": 9.81, "feet_per_meter": 3.28084, "cm_per_inch": 2.54}
     history = []
     parser = lexical_analyzer.TokenParser()
     while True:
@@ -40,6 +41,7 @@ def main():
                 break
 
             env = build_env_from_history(history)
+            env.update(global_env)
             _tokens = parser.parse(expression)
             _tokens = preprocess_tokens(_tokens)
             tree_builder = binary_tree.TreeBuilder()
