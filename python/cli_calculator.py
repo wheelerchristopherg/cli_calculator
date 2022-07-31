@@ -13,7 +13,7 @@ def preprocess_tokens(_tokens):
     while i < len(_tokens) - 1:
         if isinstance(_tokens[i], tokens.Minus) and (
             i == 0
-            or (not isinstance(_tokens[i - 1], (tokens.Number, tokens.CloseParen)))
+            or (not isinstance(_tokens[i - 1], (tokens.Variable, tokens.Number, tokens.CloseParen)))
         ):
             if isinstance(_tokens[i + 1], (tokens.Variable, tokens.OpenParen)):
                 _tokens.pop(i)
@@ -43,7 +43,9 @@ def main():
             env = build_env_from_history(history)
             env.update(global_env)
             _tokens = parser.parse(expression)
+            print(_tokens)
             _tokens = preprocess_tokens(_tokens)
+            print(_tokens)
             tree_builder = binary_tree.TreeBuilder()
             tree_builder.build_tree(_tokens)
             tree = tree_builder.get_tree()

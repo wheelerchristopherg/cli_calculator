@@ -14,14 +14,6 @@ class NoTokenMatched(Exception):
 
 
 class State:
-    @staticmethod
-    def get_character_type(character):
-        if character.isdigit():
-            return DIGIT
-        elif character.isalpha():
-            return ALPHA
-        return None
-
     def __init__(self, matched_token_type=None):
         self.transitions = {}
         self.matched_token_type = matched_token_type
