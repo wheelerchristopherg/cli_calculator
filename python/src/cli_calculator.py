@@ -34,9 +34,13 @@ def preprocess_tokens(_tokens):
     return _tokens
 
 
-def parse_expression(parser, env, expression):
+def parse_expression(parser, expression):
     _tokens = parser.parse(expression)
     _tokens = preprocess_tokens(_tokens)
+    return _tokens
+ 
+
+def evaluate_tokenized_expression(env, _tokens):
     tree_builder = binary_tree.TreeBuilder()
     tree_builder.build_tree(_tokens)
     tree = tree_builder.get_tree()
@@ -56,7 +60,8 @@ def main():
 
             env = build_env_from_history(history)
             env.update(global_env)
-            result = parse_expression(parser, env, expression)
+            _tokens = parse_expression(parser, expression)
+            result = evaluate_tokenized_expression(env, _tokens)
         except Exception as e:
             # raise e
             print(e)
