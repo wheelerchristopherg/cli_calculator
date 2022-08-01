@@ -30,6 +30,11 @@ def preprocess_tokens(_tokens):
             _tokens[i], (tokens.Number, tokens.Variable, tokens.CloseParen)
         ) and isinstance(_tokens[i + 1], tokens.OpenParen):
             _tokens.insert(i + 1, tokens.Multiply())
+        elif isinstance(_tokens[i], tokens.CloseParen) and isinstance(
+            _tokens[i + 1], (tokens.Number, tokens.Variable, tokens.OpenParen)
+        ):
+            _tokens.insert(i + 1, tokens.Multiply())
+
         i += 1
     return _tokens
 
@@ -38,7 +43,7 @@ def parse_expression(parser, expression):
     _tokens = parser.parse(expression)
     _tokens = preprocess_tokens(_tokens)
     return _tokens
- 
+
 
 def evaluate_tokenized_expression(env, _tokens):
     tree_builder = binary_tree.TreeBuilder()
