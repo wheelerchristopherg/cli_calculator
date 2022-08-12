@@ -35,14 +35,16 @@ class BinaryTree:
             and isinstance(self.token, tokens.Operator)
         ):
             raise Exception(
-                f"Invalid Operation: {self.token}({self.left}, {self.right})"
+                "Invalid Operation: {}({}, {})".format(self.token, self.left, self.right)
             )
 
     def evaluate(self, env):
-        if (valid_number := self._check_valid_number_token()) != None:
+        valid_number = self._check_valid_number_token()
+        if valid_number != None:
             return valid_number
 
-        if (resolved_var := self._check_valid_var_token(env)) != None:
+        resolved_var = self._check_valid_var_token(env)
+        if resolved_var != None:
             return resolved_var
 
         self._check_valid_operation()
@@ -75,11 +77,11 @@ class TreeBuilder:
                     raise Exception("Extra )")
                 first = paren_stack.pop()
                 sub_expression = _tokens[first : i + 1]
-                variable = tokens.Variable(f"p{substitution_counter}")
+                variable = tokens.Variable("p{}".format(substitution_counter))
                 for _ in range(len(sub_expression)):
                     _tokens.pop(first)
                 _tokens.insert(first, variable)
-                self.paren_substitutions[f"p{substitution_counter}"] = self._build_tree(
+                self.paren_substitutions["p{}".format(substitution_counter)] = self._build_tree(
                     sub_expression[1:-1], sub_parens=False
                 )
                 substitution_counter += 1

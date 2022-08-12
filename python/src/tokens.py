@@ -43,7 +43,7 @@ class Variable(Token):
             if isinstance(result, binary_tree.BinaryTree):
                 return result.evaluate(env)
             return result
-        raise Exception(f"Unknown Variable: {self.value}")
+        raise Exception("Unknown Variable: {}".format(self.value))
 
 
 class Number(Token):

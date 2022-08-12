@@ -5,7 +5,7 @@ import tokens
 
 
 def build_env_from_history(history):
-    return {f"x{i}": value for i, value in enumerate(history)}
+    return {"x{}".format(i): value for i, value in enumerate(history)}
 
 
 def preprocess_tokens(_tokens):
@@ -72,7 +72,7 @@ def main():
             print(e)
             continue
         history.append(result)
-        print(f"x{len(history)-1} = {result}")
+        print("x{} = {}".format(len(history)-1, result))
 
 
 if __name__ == "__main__":
