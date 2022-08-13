@@ -9,10 +9,6 @@ class UnexpectedCharacter(Exception):
     pass
 
 
-class NoTokenMatched(Exception):
-    pass
-
-
 class State:
     def __init__(self, matched_token_type=None):
         self.transitions = {}
@@ -21,21 +17,25 @@ class State:
     def add_transition(self, character, state):
         self.transitions.update({character: state})
 
-    def next_state(self, character):
+    def get_next_state(self, character):
         char_type = State.get_character_type(character)
         if character in self.transitions:
             return self.transitions[character]
         elif char_type in self.transitions:
             return self.transitions[char_type]
         elif self.matched_token_type:
-            return self.matched_token_type
+            return None
 
         if character:
             raise UnexpectedCharacter(character)
-        raise NoTokenMatched()
+
+    def get_token(self):
+        return self.matched_token_type
 
     @staticmethod
     def get_character_type(character):
+        if not isinstance(character, str):
+            return None
         if character.isdigit():
             return DIGIT
         elif character.isalpha():
@@ -99,25 +99,30 @@ class TokenParser:
         token_list = []
 
         while char_pos < len(text):
-            value = None
             try:
-                value = current_state.next_state(text[char_pos])
+                next_state = current_state.get_next_state(text[char_pos])
             except UnexpectedCharacter as e:
                 error_position = " " * char_pos
                 error_position += "^"
                 mono_char_text = text.replace("\t", " ")
                 raise UnexpectedCharacter(
-                    "Unexpected character {} at position {}\n{}\n{}".format(e.args[0], char_pos, mono_char_text[:-1], error_position)
+                    "Unexpected character {} at position {}\n{}\n{}".format(e.args[0], char_pos+1, mono_char_text[:-1], error_position)
                 )
-            except NoTokenMatched as e:
-                raise e
+
+            value = None
+            if not next_state:
+                value = current_state.get_token()
+                current_state = self.states[0]
+            else:
+                current_state = next_state
+                char_pos += 1
+                continue
 
             if value is tokens.EOL:
                 token_list.append(value())
                 break
 
-            if type(value) is type(tokens.Token) and issubclass(value, tokens.Token):
-                current_state = self.states[0]
+            if value and issubclass(value, tokens.Token):
                 token_text = text[token_start:char_pos]
                 new_token = None
                 if issubclass(value, tokens.Number) or issubclass(
@@ -129,8 +134,5 @@ class TokenParser:
                 if not isinstance(new_token, tokens.WhiteSpace):
                     token_list.append(new_token)
                 token_start = char_pos
-            elif isinstance(value, State):
-                current_state = value
-                char_pos += 1
 
         return token_list
