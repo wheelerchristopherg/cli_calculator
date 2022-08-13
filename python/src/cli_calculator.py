@@ -34,6 +34,8 @@ def preprocess_tokens(_tokens):
             _tokens[i + 1], (tokens.Number, tokens.Variable, tokens.OpenParen)
         ):
             _tokens.insert(i + 1, tokens.Multiply())
+        elif isinstance(_tokens[i], tokens.Number) and isinstance(_tokens[i + 1], tokens.Variable):
+            _tokens.insert(i + 1, tokens.Multiply())
 
         i += 1
     return _tokens
