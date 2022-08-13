@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import lexical_analyzer
 import binary_tree
 import tokens
