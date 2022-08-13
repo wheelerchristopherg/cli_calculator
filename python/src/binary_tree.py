@@ -77,11 +77,11 @@ class TreeBuilder:
                     raise Exception("Extra )")
                 first = paren_stack.pop()
                 sub_expression = _tokens[first : i + 1]
-                variable = tokens.Variable("p{}".format(substitution_counter))
+                variable = tokens.Variable("{}".format(substitution_counter))
                 for _ in range(len(sub_expression)):
                     _tokens.pop(first)
                 _tokens.insert(first, variable)
-                self.paren_substitutions["p{}".format(substitution_counter)] = self._build_tree(
+                self.paren_substitutions["{}".format(substitution_counter)] = self._build_tree(
                     sub_expression[1:-1], sub_parens=False
                 )
                 substitution_counter += 1
