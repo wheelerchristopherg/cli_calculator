@@ -34,7 +34,9 @@ def preprocess_tokens(_tokens):
             _tokens[i + 1], (tokens.Number, tokens.Variable, tokens.OpenParen)
         ):
             _tokens.insert(i + 1, tokens.Multiply())
-        elif isinstance(_tokens[i], tokens.Number) and isinstance(_tokens[i + 1], tokens.Variable):
+        elif isinstance(_tokens[i], tokens.Number) and isinstance(
+            _tokens[i + 1], tokens.Variable
+        ):
             _tokens.insert(i + 1, tokens.Multiply())
 
         i += 1
@@ -74,7 +76,7 @@ def main():
             print(e)
             continue
         history.append(result)
-        print("x{} = {}".format(len(history)-1, result))
+        print("x{} = {}".format(len(history) - 1, result))
 
 
 if __name__ == "__main__":

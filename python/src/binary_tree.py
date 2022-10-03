@@ -35,7 +35,9 @@ class BinaryTree:
             and isinstance(self.token, tokens.Operator)
         ):
             raise Exception(
-                "Invalid Operation: {}({}, {})".format(self.token, self.left, self.right)
+                "Invalid Operation: {}({}, {})".format(
+                    self.token, self.left, self.right
+                )
             )
 
     def evaluate(self, env):
@@ -81,9 +83,9 @@ class TreeBuilder:
                 for _ in range(len(sub_expression)):
                     _tokens.pop(first)
                 _tokens.insert(first, variable)
-                self.paren_substitutions["{}".format(substitution_counter)] = self._build_tree(
-                    sub_expression[1:-1], sub_parens=False
-                )
+                self.paren_substitutions[
+                    "{}".format(substitution_counter)
+                ] = self._build_tree(sub_expression[1:-1], sub_parens=False)
                 substitution_counter += 1
                 i = first + 1
             else:
