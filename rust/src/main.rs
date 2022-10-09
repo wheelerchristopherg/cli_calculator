@@ -5,22 +5,17 @@ use tokens::Token;
 fn main() {
     loop {
         println!("Enter Expression:");
-        match read_line() {
-            Ok(expression) => {
-                let exp = expression.trim();
-                if exp == "q" {
-                    break;
-                }
-                let str_tokens = exp.split(" ");
-                let mut parsed_tokens: Vec<Token> = Vec::new();
-                for t in str_tokens {
-                    parsed_tokens.push(Token::from(t))
-                }
-                println!("Tokens: {:?}", parsed_tokens)
+        if let Ok(expression) = read_line() {
+            let exp = expression.trim();
+            if exp == "" || exp == "q" {
+                break;
             }
-            Err(_) => {
-                println!("Oops! Something went wrong!");
+            let str_tokens = exp.split(" ");
+            let mut parsed_tokens: Vec<Token> = Vec::new();
+            for t in str_tokens {
+                parsed_tokens.push(Token::from(t))
             }
+            println!("Tokens: {:?}", parsed_tokens)
         }
     }
 }
