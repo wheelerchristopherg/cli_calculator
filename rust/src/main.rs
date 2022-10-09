@@ -11,9 +11,13 @@ fn main() {
             if exp == "" || exp == "q" {
                 break;
             }
-            let mut parser = TokenParser::new(expression);
-            let parsed_tokens: Vec<Token> = parser.get_tokens();
-            println!("Tokens: {:?}", parsed_tokens)
+            match TokenParser::new(expression) {
+                Ok(mut parser) => {
+                    let parsed_tokens: Vec<Token> = parser.get_tokens();
+                    println!("Tokens: {:?}", parsed_tokens)
+                }
+                Err(e) => println!("Error: {}", e),
+            }
         }
     }
 }

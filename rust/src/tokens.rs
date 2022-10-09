@@ -82,13 +82,3 @@ impl From<&str> for Token {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn open_paren() {
-        assert_eq!(Token::from("("), Token::Paren(ParenType::OpenParen))
-    }
-}
