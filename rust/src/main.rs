@@ -1,29 +1,28 @@
+mod lexical_analyzer;
 mod tokens;
-use std::io;
+use lexical_analyzer::TokenParser;
+use std::io::{self, Write};
 use tokens::Token;
 
 fn main() {
     loop {
-        println!("Enter Expression:");
-        if let Ok(expression) = read_line() {
+        if let Ok(expression) = read_line("> ") {
             let exp = expression.trim();
             if exp == "" || exp == "q" {
                 break;
             }
-            let str_tokens = exp.split(" ");
-            let mut parsed_tokens: Vec<Token> = Vec::new();
-            for t in str_tokens {
-                parsed_tokens.push(Token::from(t))
-            }
+            let mut parser = TokenParser::new(expression);
+            let parsed_tokens: Vec<Token> = parser.get_tokens();
             println!("Tokens: {:?}", parsed_tokens)
         }
     }
 }
 
-fn read_line() -> Result<String, io::Error> {
+fn read_line(prompt: &str) -> Result<String, io::Error> {
     let mut user_input = String::new();
-    let stdin = io::stdin();
-    match stdin.read_line(&mut user_input) {
+    print!("{}", prompt);
+    io::stdout().flush()?;
+    match io::stdin().read_line(&mut user_input) {
         Ok(_) => Ok(user_input),
         Err(e) => Err(e),
     }

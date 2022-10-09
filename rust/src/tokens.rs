@@ -1,16 +1,16 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ParenType {
     OpenParen,
     CloseParen,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Num {
     Float(f64),
     Integer(i64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Op {
     Add,
     Sub,
@@ -18,20 +18,20 @@ pub enum Op {
     Div,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Paren(ParenType),
     Number(Num),
     Operator(Op),
-    // Variable(String),
+    Variable(String),
     Whitespace,
     EOL,
 }
 
 impl Token {
-    // pub fn new_variable(value: &str) -> Self {
-    //     Token::Variable(value.to_owned())
-    // }
+    pub fn new_variable(value: &str) -> Self {
+        Token::Variable(value.to_owned())
+    }
 
     fn is_paren(value: &str) -> Option<ParenType> {
         match value {
