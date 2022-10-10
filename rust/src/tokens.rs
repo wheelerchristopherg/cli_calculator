@@ -26,11 +26,36 @@ pub enum Token {
     Variable(String),
     Whitespace,
     EOL,
+    InvalidToken(String),
 }
 
 impl Token {
     pub fn new_variable(value: &str) -> Self {
         Token::Variable(value.to_owned())
+    }
+
+    pub fn new_number(value: &str) -> Self {
+        if let Some(num) = Self::is_number(value) {
+            Token::Number(num)
+        } else {
+            Token::InvalidToken(value.to_owned())
+        }
+    }
+
+    pub fn new_paren(value: &str) -> Self {
+        if let Some(paren) = Self::is_paren(value) {
+            Token::Paren(paren)
+        } else {
+            Token::InvalidToken(value.to_owned())
+        }
+    }
+
+    pub fn new_op(value: &str) -> Self {
+        if let Some(op) = Self::is_operator(value) {
+            Token::Operator(op)
+        } else {
+            Token::InvalidToken(value.to_owned())
+        }
     }
 
     fn is_paren(value: &str) -> Option<ParenType> {
@@ -77,8 +102,10 @@ impl From<&str> for Token {
             Token::Operator(op)
         } else if Self::is_whitespace(value) {
             Token::Whitespace
-        } else {
+        } else if value == "\n" {
             Token::EOL
+        } else {
+            Token::InvalidToken(value.to_owned())
         }
     }
 }
