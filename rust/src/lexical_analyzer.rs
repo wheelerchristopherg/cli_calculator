@@ -97,11 +97,19 @@ impl TokenParser {
             };
             if let Some(resolved) = t {
                 self.current_state = State::Initial;
-                self.token_offset = self.token_offset + i;
-                if let Token::InvalidToken(e) = resolved {
-                    return Err(e);
+                if i > 0 {
+                    self.token_offset = self.token_offset + i;
+                    if let Token::InvalidToken(e) = resolved {
+                        return Err(e);
+                    } else {
+                        resolved_token = Some(resolved.clone());
+                        break;
+                    }
                 } else {
-                    resolved_token = Some(resolved.clone());
+                    resolved_token = Some(Token::InvalidToken(
+                        self.expression[self.token_offset..self.token_offset + 1].to_owned(),
+                    ));
+                    self.token_offset += 1;
                     break;
                 }
             }
@@ -228,6 +236,29 @@ mod tests {
             Token::new_paren(")"),
             Token::new_variable("_"),
             Token::new_op("+"),
+        ];
+        assert_eq!(t, expected);
+    }
+
+    #[test]
+    fn invalid_char() {
+        let expression = String::from("15 ===  &@3.4 + ^%$#12 \n");
+        let mut parser = TokenParser::new(expression).expect("Expression was not ascii.");
+        let t: Vec<Token> = parser.get_tokens();
+        let expected = vec![
+            Token::new_number("15"),
+            Token::InvalidToken("=".to_owned()),
+            Token::InvalidToken("=".to_owned()),
+            Token::InvalidToken("=".to_owned()),
+            Token::InvalidToken("&".to_owned()),
+            Token::InvalidToken("@".to_owned()),
+            Token::new_number("3.4"),
+            Token::new_op("+"),
+            Token::InvalidToken("^".to_owned()),
+            Token::InvalidToken("%".to_owned()),
+            Token::InvalidToken("$".to_owned()),
+            Token::InvalidToken("#".to_owned()),
+            Token::new_number("12"),
         ];
         assert_eq!(t, expected);
     }

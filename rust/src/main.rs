@@ -5,6 +5,10 @@ use std::io::{self, Write};
 use tokens::Token;
 
 fn main() {
+    main_loop();
+}
+
+fn main_loop() {
     loop {
         if let Ok(expression) = read_line("> ") {
             let exp = expression.trim();
