@@ -5,7 +5,6 @@ enum Lang {
     Rust,
 }
 
-
 #[test]
 fn test_python() {
     test_cases(Lang::Python);
@@ -15,7 +14,6 @@ fn test_python() {
 fn test_rust() {
     test_cases(Lang::Rust);
 }
-
 
 fn test_cases(lang: Lang) {
     assert_eq!(run(&lang, "hi"), "Unknown Variable: hi\n");
