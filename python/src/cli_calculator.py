@@ -2,6 +2,7 @@
 import lexical_analyzer
 import binary_tree
 import tokens
+from argparse import ArgumentParser
 
 
 def build_env_from_history(history):
@@ -57,7 +58,7 @@ def evaluate_tokenized_expression(env, _tokens):
     return tree.evaluate(env)
 
 
-def main():
+def interactive():
     global_env = {"g": 9.81, "feet_per_meter": 3.28084, "cm_per_inch": 2.54}
     history = []
     parser = lexical_analyzer.TokenParser()
@@ -77,6 +78,31 @@ def main():
             continue
         history.append(result)
         print("x{} = {}".format(len(history) - 1, result))
+
+
+def argument(expression):
+    global_env = {"g": 9.81, "feet_per_meter": 3.28084, "cm_per_inch": 2.54}
+    history = []
+    parser = lexical_analyzer.TokenParser()
+    try:
+        env = build_env_from_history(history)
+        env.update(global_env)
+        _tokens = parse_expression(parser, expression)
+        result = evaluate_tokenized_expression(env, _tokens)
+        print("x0 = {}".format(result))
+    except Exception as e:
+        print(e)
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("--expression", type=ascii, required=False)
+
+    args = parser.parse_args()
+    if exp := args.expression:
+        argument(exp[1:-1])
+    else:
+        interactive()
 
 
 if __name__ == "__main__":

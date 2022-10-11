@@ -1,11 +1,22 @@
 mod lexical_analyzer;
 mod tokens;
 use lexical_analyzer::TokenParser;
+use std::env;
 use std::io::{self, Write};
 use tokens::Token;
 
 fn main() {
-    main_loop();
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 1 {
+        main_loop();
+    } else if args.len() == 3 && args.get(1).unwrap_or(&"".to_owned()) == "--expression" {
+        let default = "".to_owned();
+        let e = args.get(2).unwrap_or(&default);
+        println!("expression given: {}", e);
+        parse_expression(e);
+    } else {
+        println!("invalid arguments");
+    }
 }
 
 fn main_loop() {
@@ -15,14 +26,18 @@ fn main_loop() {
             if exp == "" || exp == "q" {
                 break;
             }
-            match TokenParser::new(expression) {
-                Ok(mut parser) => {
-                    let parsed_tokens: Vec<Token> = parser.get_tokens();
-                    println!("Tokens: {:?}", parsed_tokens)
-                }
-                Err(e) => println!("Error: {}", e),
-            }
+            parse_expression(&expression);
         }
+    }
+}
+
+fn parse_expression(expression: &String) {
+    match TokenParser::new(expression) {
+        Ok(mut parser) => {
+            let parsed_tokens: Vec<Token> = parser.get_tokens();
+            println!("Tokens: {:?}", parsed_tokens)
+        }
+        Err(e) => println!("Error: {}", e),
     }
 }
 
