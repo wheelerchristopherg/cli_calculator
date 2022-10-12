@@ -106,14 +106,15 @@ impl TokenParser {
                         break;
                     }
                 } else {
-                    resolved_token = Some(Token::InvalidToken(value.clone().to_owned()));
+                    resolved_token = Some(Token::InvalidToken(self.expression[self.token_offset..self.token_offset + i + 1].to_string()));
                     self.token_offset += 1;
                     break;
                 }
             } else if self.token_offset + i + 1 == self.expression.len() {
-                println!("last char");
-                let value = &self.expression[self.token_offset..=self.token_offset + i];
-                resolved_token = Some(Self::token_from_state(&self.current_state, value));
+                resolved_token = Some(Self::token_from_state(
+                    &self.current_state,
+                    &self.expression[self.token_offset..self.token_offset + i + 1],
+                ));
                 self.token_offset += i + 1;
             }
         }
@@ -263,6 +264,7 @@ mod tests {
             Token::InvalidToken("$".to_owned()),
             Token::InvalidToken("#".to_owned()),
             Token::new_number("12"),
+            Token::EOL,
         ];
         assert_eq!(t, expected);
     }
