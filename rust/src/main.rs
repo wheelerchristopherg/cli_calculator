@@ -12,7 +12,6 @@ fn main() {
     } else if args.len() == 3 && args.get(1).unwrap_or(&"".to_owned()) == "--expression" {
         let default = "".to_owned();
         let e = args.get(2).unwrap_or(&default);
-        println!("expression given: {}", e);
         parse_expression(e);
     } else {
         println!("invalid arguments");
