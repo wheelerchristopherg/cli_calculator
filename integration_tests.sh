@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd rust
 cargo build
-cd ../e2e
+cd ../integration
 cargo test
 cd ..
 
