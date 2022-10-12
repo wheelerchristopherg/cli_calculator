@@ -60,9 +60,8 @@ impl TokenParser {
         let mut token_vec: Vec<Token> = vec![];
         while self.token_offset < self.expression.len() {
             let next = match self.next_token() {
-                Err(s) => Token::InvalidToken(s),
-                Ok(Some(n)) => n,
-                Ok(None) => break,
+                Some(n) => n,
+                None => break,
             };
             #[cfg(test)]
             println!("resolved token: {:?}", next);
@@ -73,44 +72,34 @@ impl TokenParser {
         token_vec
     }
 
-    fn next_token(&mut self) -> Result<Option<Token>, String> {
+    fn next_token(&mut self) -> Option<Token> {
+        self.current_state = State::Initial;
         let mut resolved_token = None;
         for (i, b) in self.expression[self.token_offset..].bytes().enumerate() {
-            let value = &self.expression[self.token_offset..self.token_offset + i];
-            let t: Option<Token> = match Self::transition(&self.current_state, &(b as char)) {
-                Some(new_state) => {
-                    #[cfg(test)]
-                    println!(
-                        "{:?} -> {:?}: {:?}",
-                        self.current_state,
-                        new_state,
-                        &self.expression[self.token_offset..self.token_offset + i + 1]
-                    );
-                    self.current_state = new_state;
-                    None
-                }
-                None => {
-                    #[cfg(test)]
-                    println!("transition failed");
-                    Some(Self::token_from_state(&self.current_state, value))
-                }
-            };
-            if let Some(resolved) = t {
-                self.current_state = State::Initial;
-                if i > 0 {
-                    self.token_offset = self.token_offset + i;
-                    if let Token::InvalidToken(e) = resolved {
-                        return Err(e);
-                    } else {
-                        resolved_token = Some(resolved.clone());
-                        break;
-                    }
-                } else {
-                    resolved_token = Some(Token::InvalidToken(self.expression[self.token_offset..self.token_offset + i + 1].to_string()));
-                    self.token_offset += 1;
-                    break;
-                }
-            } else if self.token_offset + i + 1 == self.expression.len() {
+            let next_state = Self::transition(&self.current_state, &(b as char));
+            if let None = next_state {
+                #[cfg(test)]
+                println!("transition failed, resolving");
+                let start = self.token_offset;
+                let end = if i == 0 { 1 } else { i };
+                resolved_token = Some(Self::token_from_state(
+                    &self.current_state,
+                    &self.expression[start..start + end],
+                ));
+                self.token_offset += end;
+                break;
+            } else if let Some(state) = next_state {
+                #[cfg(test)]
+                println!("{:?} -> {:?}", self.current_state, state);
+                self.current_state = state;
+            }
+
+            if self.token_offset + i + 1 == self.expression.len() {
+                #[cfg(test)]
+                println!(
+                    "no more characters, resolving, state = {:?}",
+                    self.current_state
+                );
                 resolved_token = Some(Self::token_from_state(
                     &self.current_state,
                     &self.expression[self.token_offset..self.token_offset + i + 1],
@@ -118,7 +107,7 @@ impl TokenParser {
                 self.token_offset += i + 1;
             }
         }
-        Ok(resolved_token)
+        resolved_token
     }
 
     fn token_from_state(state: &State, value: &str) -> Token {
@@ -195,9 +184,8 @@ mod tests {
     #[test]
     fn parse_all_tokens() {
         let expression = String::from(" \t1.24  +9-(x0\t*(7.2  /3)) _92.19\n");
-        let mut parser = TokenParser::new(&expression).expect("Expression was not ascii.");
+        let mut parser = TokenParser::new(&expression).unwrap();
         let t: Vec<Token> = parser.get_tokens();
-
         let expected_tokens = vec![
             Token::from("1.24"),
             Token::from("+"),
@@ -216,7 +204,6 @@ mod tests {
             Token::from(".19"),
             Token::EOL,
         ];
-
         assert_eq!(t, expected_tokens);
     }
 
@@ -230,7 +217,7 @@ mod tests {
     #[test]
     fn parse_failed() {
         let expression = String::from("a * 7.(8821) _+ ");
-        let mut parser = TokenParser::new(&expression).expect("Expression was not ascii.");
+        let mut parser = TokenParser::new(&expression).unwrap();
         let t: Vec<Token> = parser.get_tokens();
         let expected = vec![
             Token::new_variable("a"),
@@ -248,7 +235,7 @@ mod tests {
     #[test]
     fn invalid_char() {
         let expression = String::from("15 ===  &@3.4 + ^%$#12 \n");
-        let mut parser = TokenParser::new(&expression).expect("Expression was not ascii.");
+        let mut parser = TokenParser::new(&expression).unwrap();
         let t: Vec<Token> = parser.get_tokens();
         let expected = vec![
             Token::new_number("15"),
@@ -272,9 +259,53 @@ mod tests {
     #[test]
     fn no_new_line() {
         let expression = String::from("15");
-        let mut parser = TokenParser::new(&expression).expect("Expression was not ascii.");
+        let mut parser = TokenParser::new(&expression).unwrap();
         let t: Vec<Token> = parser.get_tokens();
         let expected = vec![Token::new_number("15")];
+        assert_eq!(t, expected);
+    }
+
+    #[test]
+    fn empty_expression() {
+        let expression = String::from("");
+        let mut parser = TokenParser::new(&expression).unwrap();
+        let t: Vec<Token> = parser.get_tokens();
+        let expected = Vec::<Token>::new();
+        assert_eq!(t, expected);
+    }
+
+    #[test]
+    fn single_invalid() {
+        let expression = String::from("=");
+        let mut parser = TokenParser::new(&expression).unwrap();
+        let t: Vec<Token> = parser.get_tokens();
+        let expected = vec![Token::InvalidToken("=".to_owned())];
+        assert_eq!(t, expected);
+    }
+
+    #[test]
+    fn multiple_eol() {
+        let expression = String::from("1.3 +  9/2 \n (8.2 = 9) / 3\n 89\n");
+        let mut parser = TokenParser::new(&expression).unwrap();
+        let t: Vec<Token> = parser.get_tokens();
+        let expected = vec![
+            Token::new_number("1.3"),
+            Token::new_op("+"),
+            Token::new_number("9"),
+            Token::new_op("/"),
+            Token::new_number("2"),
+            Token::EOL,
+            Token::new_paren("("),
+            Token::new_number("8.2"),
+            Token::InvalidToken("=".to_owned()),
+            Token::new_number("9"),
+            Token::new_paren(")"),
+            Token::new_op("/"),
+            Token::new_number("3"),
+            Token::EOL,
+            Token::new_number("89"),
+            Token::EOL,
+        ];
         assert_eq!(t, expected);
     }
 }
