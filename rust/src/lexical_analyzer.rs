@@ -77,21 +77,24 @@ impl TokenParser {
         let mut resolved_token = None;
         for (i, b) in self.expression[self.token_offset..].bytes().enumerate() {
             let next_state = Self::transition(&self.current_state, &(b as char));
-            if let None = next_state {
-                #[cfg(test)]
-                println!("transition failed, resolving");
-                let start = self.token_offset;
-                let end = if i == 0 { 1 } else { i };
-                resolved_token = Some(Self::token_from_state(
-                    &self.current_state,
-                    &self.expression[start..start + end],
-                ));
-                self.token_offset += end;
-                break;
-            } else if let Some(state) = next_state {
-                #[cfg(test)]
-                println!("{:?} -> {:?}", self.current_state, state);
-                self.current_state = state;
+            match next_state {
+                None => {
+                    #[cfg(test)]
+                    println!("transition failed, resolving");
+                    let start = self.token_offset;
+                    let end = if i == 0 { 1 } else { i };
+                    resolved_token = Some(Self::token_from_state(
+                        &self.current_state,
+                        &self.expression[start..start + end],
+                    ));
+                    self.token_offset += end;
+                    break;
+                }
+                Some(state) => {
+                    #[cfg(test)]
+                    println!("{:?} -> {:?}", self.current_state, state);
+                    self.current_state = state;
+                }
             }
 
             if self.token_offset + i + 1 == self.expression.len() {
