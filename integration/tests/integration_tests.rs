@@ -26,11 +26,14 @@ fn test_cases(lang: Lang) {
         ),
         ("(2 -9.0) / 3.0", "x0 = -2.3333333333333335\n"),
     ];
+    run_tests(input_expected, &lang);
+}
 
+fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
     let mut results = Vec::new();
 
-    for &(i, _) in input_expected.iter() {
-        results.push(run(&lang, i))
+    for &(input, _) in input_expected.iter() {
+        results.push(run_command(&lang, input))
     }
 
     for ((input, expected), output) in input_expected.iter().zip(results.iter()) {
@@ -44,7 +47,7 @@ fn test_cases(lang: Lang) {
     }
 }
 
-fn run(language: &Lang, expression: &str) -> String {
+fn run_command(language: &Lang, expression: &str) -> String {
     let mut executable = match language {
         Lang::Python => Command::new("../python/src/cli_calculator.py"),
         Lang::Rust => Command::new("../rust/target/debug/cli_calculator"),
