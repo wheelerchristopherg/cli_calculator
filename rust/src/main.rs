@@ -1,5 +1,5 @@
-pub mod lexical_analyzer;
-pub mod tokens;
+mod lexical_analyzer;
+mod tokens;
 
 use std::env;
 use std::io::{self, Write};
@@ -20,7 +20,7 @@ fn main() {
     }
 }
 
-pub fn main_loop() {
+fn main_loop() {
     loop {
         if let Ok(expression) = read_line("> ") {
             let exp = expression.trim();
@@ -32,7 +32,7 @@ pub fn main_loop() {
     }
 }
 
-pub fn parse_expression(expression: &String) {
+fn parse_expression(expression: &String) {
     match TokenParser::new(expression) {
         Ok(mut parser) => {
             let parsed_tokens: Vec<Token> = parser.get_tokens();
