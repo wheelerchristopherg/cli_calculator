@@ -16,13 +16,32 @@ fn test_rust() {
 }
 
 fn test_cases(lang: Lang) {
-    assert_eq!(run(&lang, "hi"), "Unknown Variable: hi\n");
-    assert_eq!(run(&lang, "x *2"), "Unknown Variable: x\n");
-    assert_eq!(run(&lang, "5 *2"), "x0 = 10\n");
-    assert_eq!(
-        run(&lang, "5.2= *2"),
-        "Unexpected character = at position 4\n5.2= *2\n   ^\n"
-    );
+    let input_expected = vec![
+        ("hi", "Unknown Variable: hi\n"),
+        ("x *2", "Unknown Variable: x\n"),
+        ("5 *2", "x0 = 10\n"),
+        (
+            "5.2= *2",
+            "Unexpected character = at position 4\n5.2= *2\n   ^\n",
+        ),
+        ("(2 -9.0) / 3.0", "x0 = -2.3333333333333335\n"),
+    ];
+
+    let mut results = Vec::new();
+
+    for &(i, _) in input_expected.iter() {
+        results.push(run(&lang, i))
+    }
+
+    for ((input, expected), output) in input_expected.iter().zip(results.iter()) {
+        println!("input: {input}");
+        println!("output: {output}");
+        println!("expected: {expected}");
+    }
+
+    for ((_, expected), output) in input_expected.iter().zip(results.iter()) {
+        assert_eq!(output, expected);
+    }
 }
 
 fn run(language: &Lang, expression: &str) -> String {
