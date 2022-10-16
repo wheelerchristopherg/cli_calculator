@@ -63,33 +63,33 @@ class TokenParser:
         self.states.append(State(tokens.WhiteSpace))
         self.states.append(State(tokens.Variable))
 
-        self.states[0].add_transition(DIGIT, self.states[1])    # integer
-        self.states[0].add_transition(".", self.states[2])      # decimal start
-        self.states[0].add_transition("(", self.states[3])      # open paren
-        self.states[0].add_transition(")", self.states[4])      # close paren
-        self.states[0].add_transition("-", self.states[5])      # minus
-        self.states[0].add_transition("+", self.states[6])      # plus
-        self.states[0].add_transition("*", self.states[7])      # multiply
-        self.states[0].add_transition("/", self.states[8])      # divide
-        self.states[0].add_transition("\n", self.states[10])    # EOL
-        self.states[0].add_transition(" ", self.states[11])     # whitespace
-        self.states[0].add_transition("\t", self.states[11])    # whitespace
-        self.states[0].add_transition(ALPHA, self.states[12])   # variable
-        self.states[0].add_transition("_", self.states[12])     # variable
+        self.states[0].add_transition(DIGIT, self.states[1])  # integer
+        self.states[0].add_transition(".", self.states[2])  # decimal start
+        self.states[0].add_transition("(", self.states[3])  # open paren
+        self.states[0].add_transition(")", self.states[4])  # close paren
+        self.states[0].add_transition("-", self.states[5])  # minus
+        self.states[0].add_transition("+", self.states[6])  # plus
+        self.states[0].add_transition("*", self.states[7])  # multiply
+        self.states[0].add_transition("/", self.states[8])  # divide
+        self.states[0].add_transition("\n", self.states[10])  # EOL
+        self.states[0].add_transition(" ", self.states[11])  # whitespace
+        self.states[0].add_transition("\t", self.states[11])  # whitespace
+        self.states[0].add_transition(ALPHA, self.states[12])  # variable
+        self.states[0].add_transition("_", self.states[12])  # variable
 
-        self.states[1].add_transition(DIGIT, self.states[1])    # integer
-        self.states[1].add_transition(".", self.states[2])      # decimal start
+        self.states[1].add_transition(DIGIT, self.states[1])  # integer
+        self.states[1].add_transition(".", self.states[2])  # decimal start
 
-        self.states[2].add_transition(DIGIT, self.states[9])    # float
+        self.states[2].add_transition(DIGIT, self.states[9])  # float
 
-        self.states[9].add_transition(DIGIT, self.states[9])    # float
+        self.states[9].add_transition(DIGIT, self.states[9])  # float
 
-        self.states[11].add_transition(" ", self.states[11])    # whitespace
-        self.states[11].add_transition("\t", self.states[11])   # whitespace
+        self.states[11].add_transition(" ", self.states[11])  # whitespace
+        self.states[11].add_transition("\t", self.states[11])  # whitespace
 
         self.states[12].add_transition(ALPHA, self.states[12])  # variable
         self.states[12].add_transition(DIGIT, self.states[12])  # variable
-        self.states[12].add_transition("_", self.states[12])    # variable
+        self.states[12].add_transition("_", self.states[12])  # variable
 
     def parse(self, _input):
         text = _input + "\n"
