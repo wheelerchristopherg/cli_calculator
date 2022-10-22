@@ -45,12 +45,12 @@ impl AST {
         let l = self
             .left
             .as_deref()
-            .ok_or("no left".to_owned())?
+            .ok_or("No Left Node".to_owned())?
             .evaluate()?;
         let r = self
             .right
             .as_deref()
-            .ok_or("no right".to_owned())?
+            .ok_or("No Right Node".to_owned())?
             .evaluate()?;
         let result = match oper {
             Op::Add => l + r,

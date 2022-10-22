@@ -40,8 +40,8 @@ fn complex_evaluate() {
 fn no_left_node() {
     let root = AST::new(Token::new_op("/"));
 
-    let error = root.evaluate().expect_err("should throw 'no left'");
-    assert_eq!(error, "no left");
+    let error = root.evaluate().expect_err("should throw 'No Left Node'");
+    assert_eq!(error, "No Left Node");
 }
 
 #[test]
@@ -50,8 +50,8 @@ fn no_right_node() {
     let mut root = AST::new(Token::new_op("/"));
     root.set_left(Some(left));
 
-    let error = root.evaluate().expect_err("should throw 'no right'");
-    assert_eq!(error, "no right");
+    let error = root.evaluate().expect_err("should throw 'No Right Node'");
+    assert_eq!(error, "No Right Node");
 }
 
 #[test]
@@ -74,6 +74,8 @@ fn cannot_evaluate_paren() {
     root.set_left(Some(left));
     root.set_right(Some(right));
 
-    let error = root.evaluate().expect_err("should throw 'Cannot evaluate Paren(OpenParen)'");
+    let error = root
+        .evaluate()
+        .expect_err("should throw 'Cannot evaluate Paren(OpenParen)'");
     assert_eq!(error, "Cannot evaluate Paren(OpenParen)");
 }
