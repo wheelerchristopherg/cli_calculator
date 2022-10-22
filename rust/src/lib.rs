@@ -1,5 +1,6 @@
 pub mod lexical_analyzer;
 pub mod tokens;
+pub mod ast;
 
 use std::io::{self, Write};
 
