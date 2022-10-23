@@ -2,46 +2,31 @@
 mod tests;
 
 use crate::tokens::{Num, Op, Token};
-use std::boxed::Box;
+use std::{boxed::Box, fmt::Display};
 
 #[derive(Debug)]
-struct AST {
+pub struct AST {
+    value: Token,
     left: Option<Box<AST>>,
     right: Option<Box<AST>>,
-    value: Token,
 }
 
 impl AST {
-    fn new(value: Token) -> Box<Self> {
-        let ast = AST {
-            left: None,
-            right: None,
-            value,
-        };
+    fn new(value: Token, left: Option<Box<AST>>, right: Option<Box<AST>>) -> Box<Self> {
+        let ast = AST { left, right, value };
         Box::new(ast)
     }
 
-    fn set_left(&mut self, ast: Option<Box<AST>>) {
-        self.left = ast;
-    }
-
-    fn set_right(&mut self, ast: Option<Box<AST>>) {
-        self.right = ast;
-    }
-
-    fn evaluate(&self) -> Result<f64, String> {
+    pub fn evaluate(&self) -> Result<f64, String> {
         let result = match &self.value {
-            Token::Number(num) => match num {
-                Num::Float(x) => *x,
-                Num::Integer(x) => *x as f64,
-            },
-            Token::Operator(oper) => self.evaluate_op(&oper)?,
-            x => Err(format!("Cannot evaluate {:?}", x))?,
+            Token::Number(num) => self.evaluate_number(&num)?,
+            Token::Operator(oper) => self.evaluate_operator(&oper)?,
+            x => Err(format!("Cannot evaluate {}", x))?,
         };
         Ok(result)
     }
 
-    fn evaluate_op(&self, oper: &Op) -> Result<f64, String> {
+    fn evaluate_operator(&self, oper: &Op) -> Result<f64, String> {
         let l = self
             .left
             .as_deref()
@@ -64,5 +49,78 @@ impl AST {
             }
         };
         Ok(result)
+    }
+
+    fn evaluate_number(&self, num: &Num) -> Result<f64, String> {
+        match (&self.left, &self.right) {
+            (None, None) => (),
+            _ => Err(format!("Invalid Node: Number must be leaf"))?,
+        };
+
+        let result = match num {
+            Num::Float(x) => *x,
+            Num::Integer(x) => *x as f64,
+        };
+        Ok(result)
+    }
+
+    fn find_root_index(tokens: &[Token]) -> usize {
+        let mut root_index = 0;
+        let mut weight = -1;
+        for (i, t) in tokens.iter().enumerate() {
+            if let Some(x) = get_token_weight(t) {
+                if x >= weight {
+                    weight = x;
+                    root_index = i;
+                }
+            }
+        }
+        root_index
+    }
+
+    pub fn build_tree(tokens: &[Token]) -> Box<Self> {
+        let mut end = tokens.len();
+        if let Some(e) = tokens.iter().position(|x| x == &Token::EOL) {
+            end = e;
+        }
+
+        let root_index = Self::find_root_index(tokens);
+        let mut left: Option<Box<Self>> = None;
+        let mut right: Option<Box<Self>> = None;
+
+        if root_index > 0 {
+            left = Some(Self::build_tree(&tokens[..root_index]))
+        }
+        if root_index < tokens.len() - 1 {
+            right = Some(Self::build_tree(&tokens[(root_index + 1)..end]))
+        }
+
+        Self::new(tokens[root_index].clone(), left, right)
+    }
+}
+
+impl Display for AST {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match (&self.left, &self.right) {
+            (None, None) => write!(f, "'{}'", self.value),
+            (None, Some(x)) => write!(f, "'{}' (None, {})", self.value, (**x)),
+            (Some(x), None) => write!(f, "'{}' ({}, None)", self.value, (**x)),
+            (Some(x), Some(y)) => write!(f, "'{}' ({}, {})", self.value, (**x), (**y)),
+        }
+    }
+}
+
+fn get_token_weight(token: &Token) -> Option<i32> {
+    match token {
+        Token::Paren(_) => Some(0),
+        Token::Number(_) => Some(0),
+        Token::Variable(_) => Some(0),
+        Token::Operator(oper) => match oper {
+            Op::Add => Some(2),
+            Op::Sub => Some(2),
+            Op::Mult => Some(1),
+            Op::Div => Some(1),
+        },
+        _ => None,
     }
 }

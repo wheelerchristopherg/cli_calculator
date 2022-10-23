@@ -1,9 +1,10 @@
+pub mod ast;
 pub mod lexical_analyzer;
 pub mod tokens;
-pub mod ast;
 
 use std::io::{self, Write};
 
+use ast::AST;
 use lexical_analyzer::TokenParser;
 use tokens::Token;
 
@@ -23,7 +24,12 @@ pub fn parse_expression(expression: &String) {
     match TokenParser::new(expression) {
         Ok(mut parser) => {
             let parsed_tokens: Vec<Token> = parser.get_tokens();
-            println!("Tokens: {:?}", parsed_tokens)
+            let tree: Box<AST> = AST::build_tree(&parsed_tokens);
+            println!("tree: {}", tree);
+            match tree.evaluate() {
+                Ok(x) => println!("x0 = {}", x),
+                Err(e) => println!("{}", e),
+            }
         }
         Err(e) => println!("Error: {}", e),
     }
