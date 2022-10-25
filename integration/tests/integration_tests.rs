@@ -29,6 +29,8 @@ fn test_cases(lang: Lang) {
             "10 + 7.( + 2",
             "Unexpected character ( at position 8\n10 + 7.( + 2\n       ^\n",
         ),
+        ("10.2", "x0 = 10.2\n"),
+        ("10.2+", "Invalid Expression\n"),
     ];
     run_tests(input_expected, &lang);
 }

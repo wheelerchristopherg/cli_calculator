@@ -39,8 +39,8 @@ fn parse_failed() {
     let mut parser = TokenParser::new(&expression).unwrap();
     let result = parser.get_tokens().expect_err("");
     let expected = InvalidTokenError {
-        position: 6,
-        value: "7.".to_owned(),
+        position: 7,
+        value: "(".to_owned(),
     };
     assert_eq!(result, expected);
 }
@@ -99,5 +99,14 @@ fn multiple_eol() {
         Token::new_number("89"),
         Token::EOL,
     ];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn single_token_expression() {
+    let expression = String::from("1.3\n");
+    let mut parser = TokenParser::new(&expression).unwrap();
+    let t: Vec<Token> = parser.get_tokens().expect("should parse successfully");
+    let expected = vec![Token::new_number("1.3"), Token::EOL];
     assert_eq!(t, expected);
 }

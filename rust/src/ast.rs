@@ -30,12 +30,12 @@ impl AST {
         let l = self
             .left
             .as_deref()
-            .ok_or("No Left Node".to_owned())?
+            .ok_or("Invalid Expression".to_owned())?
             .evaluate()?;
         let r = self
             .right
             .as_deref()
-            .ok_or("No Right Node".to_owned())?
+            .ok_or("Invalid Expression".to_owned())?
             .evaluate()?;
         let result = match oper {
             Op::Add => l + r,
@@ -107,10 +107,11 @@ impl AST {
         let mut right: Option<Box<Self>> = None;
 
         if root_index > 0 {
-            left = Some(Self::build_tree(&tokens[..root_index])?)
+            left = Some(Self::build_tree(&tokens[..root_index]).map_err(|_| "".to_string())?)
         }
-        if root_index < tokens.len() - 1 {
-            right = Some(Self::build_tree(&tokens[(root_index + 1)..end])?)
+        if root_index > 0 && root_index < tokens.len() - 1 {
+            right =
+                Some(Self::build_tree(&tokens[(root_index + 1)..end]).map_err(|_| "".to_string())?)
         }
 
         Ok(Self::new(tokens[root_index].clone(), left, right))
