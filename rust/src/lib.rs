@@ -15,32 +15,44 @@ pub fn main_loop() {
             if exp == "" || exp == "q" {
                 break;
             }
-            parse_expression(&expression);
+            println!("{}", evaluate_string_expression(&expression));
         }
     }
 }
 
-pub fn parse_expression(expression: &String) {
-    match TokenParser::new(expression) {
-        Ok(mut parser) => {
-            let parsed_tokens: Vec<Token> = parser.get_tokens();
-            let tree: Box<AST> = AST::build_tree(&parsed_tokens);
-            println!("tree: {}", tree);
-            match tree.evaluate() {
-                Ok(x) => println!("x0 = {}", x),
-                Err(e) => println!("{}", e),
-            }
-        }
-        Err(e) => println!("Error: {}", e),
+pub fn evaluate_string_expression(expression: &String) -> String {
+    let parsed_tokens: Vec<Token> = match parse_tokens(expression) {
+        Ok(parsed) => parsed,
+        Err(e) => return e,
+    };
+
+    let tree: Box<AST> = match AST::build_tree(&parsed_tokens) {
+        Ok(parsed) => parsed,
+        Err(e) => return e,
+    };
+
+    match tree.evaluate() {
+        Ok(result) => format!("x0 = {}", result),
+        Err(e) => return e,
     }
+}
+
+fn parse_tokens(expression: &String) -> Result<Vec<Token>, String> {
+    let mut parser =
+        TokenParser::new(expression).map_err(|_| "Expression contains non-ascii characters.")?;
+
+    parser.get_tokens().map_err(|e| {
+        let end = expression
+            .chars()
+            .position(|c| c == '\n')
+            .unwrap_or(expression.len());
+        format!("{}\n{}\n{}", e, &expression[..end], e.arrow())
+    })
 }
 
 fn read_line(prompt: &str) -> Result<String, io::Error> {
     let mut user_input = String::new();
     print!("{}", prompt);
     io::stdout().flush()?;
-    match io::stdin().read_line(&mut user_input) {
-        Ok(_) => Ok(user_input),
-        Err(e) => Err(e),
-    }
+    io::stdin().read_line(&mut user_input).map(|_| user_input)
 }

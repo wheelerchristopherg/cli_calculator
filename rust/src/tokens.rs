@@ -36,7 +36,7 @@ pub enum Token {
 
 impl Token {
     pub fn new_number(value: &str) -> Self {
-        if let Some(num) = Self::is_number(value) {
+        if let Some(num) = Self::parse_number(value) {
             Token::Number(num)
         } else {
             Token::InvalidToken(value.to_owned())
@@ -44,7 +44,7 @@ impl Token {
     }
 
     pub fn new_paren(value: &str) -> Self {
-        if let Some(paren) = Self::is_paren(value) {
+        if let Some(paren) = Self::parse_paren(value) {
             Token::Paren(paren)
         } else {
             Token::InvalidToken(value.to_owned())
@@ -52,7 +52,7 @@ impl Token {
     }
 
     pub fn new_op(value: &str) -> Self {
-        if let Some(op) = Self::is_operator(value) {
+        if let Some(op) = Self::parse_operator(value) {
             Token::Operator(op)
         } else {
             Token::InvalidToken(value.to_owned())
@@ -63,7 +63,7 @@ impl Token {
         Token::Variable(value.to_owned())
     }
 
-    fn is_paren(value: &str) -> Option<ParenType> {
+    fn parse_paren(value: &str) -> Option<ParenType> {
         match value {
             "(" => Some(ParenType::OpenParen),
             ")" => Some(ParenType::CloseParen),
@@ -71,7 +71,7 @@ impl Token {
         }
     }
 
-    fn is_number(value: &str) -> Option<Num> {
+    fn parse_number(value: &str) -> Option<Num> {
         if let Ok(int_val) = value.parse::<i64>() {
             Some(Num::Integer(int_val))
         } else if let Ok(float_val) = value.parse::<f64>() {
@@ -81,7 +81,7 @@ impl Token {
         }
     }
 
-    fn is_operator(value: &str) -> Option<Op> {
+    fn parse_operator(value: &str) -> Option<Op> {
         match value {
             "+" => Some(Op::Add),
             "-" => Some(Op::Sub),

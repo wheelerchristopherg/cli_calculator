@@ -4,7 +4,7 @@ mod tests;
 use crate::tokens::Token;
 use std::{error::Error, fmt::Display};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct NotAsciiError;
 
 impl Display for NotAsciiError {
@@ -14,6 +14,34 @@ impl Display for NotAsciiError {
 }
 
 impl Error for NotAsciiError {}
+
+#[derive(Debug, PartialEq)]
+pub struct InvalidTokenError {
+    pub position: usize,
+    pub value: String,
+}
+
+impl InvalidTokenError {
+    pub fn arrow(&self) -> String {
+        let mut s = " "
+            .to_owned()
+            .repeat((self.position - 1) + (self.value.len() - 1));
+        s.push('^');
+        s
+    }
+}
+
+impl Display for InvalidTokenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Unexpected character {} at position {}",
+            self.value, self.position
+        )
+    }
+}
+
+impl Error for InvalidTokenError {}
 
 #[derive(Debug)]
 enum State {
@@ -59,7 +87,7 @@ impl TokenParser {
         }
     }
 
-    pub fn get_tokens(&mut self) -> Vec<Token> {
+    pub fn get_tokens(&mut self) -> Result<Vec<Token>, InvalidTokenError> {
         let mut token_vec: Vec<Token> = vec![];
         while self.token_offset < self.expression.len() {
             let next = match self.next_token() {
@@ -69,10 +97,17 @@ impl TokenParser {
             #[cfg(test)]
             println!("resolved token: {:?}", next);
             if next != Token::Whitespace {
-                token_vec.push(next.clone());
+                if let Token::InvalidToken(s) = next {
+                    Err(InvalidTokenError {
+                        position: self.token_offset,
+                        value: s,
+                    })?
+                } else {
+                    token_vec.push(next.clone());
+                }
             }
         }
-        token_vec
+        Ok(token_vec)
     }
 
     fn next_token(&mut self) -> Option<Token> {

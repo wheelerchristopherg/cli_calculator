@@ -64,11 +64,26 @@ impl AST {
         Ok(result)
     }
 
+    fn get_token_weight(token: &Token) -> Option<i32> {
+        match token {
+            Token::Paren(_) => Some(0),
+            Token::Number(_) => Some(0),
+            Token::Variable(_) => Some(0),
+            Token::Operator(oper) => match oper {
+                Op::Add => Some(2),
+                Op::Sub => Some(2),
+                Op::Mult => Some(1),
+                Op::Div => Some(1),
+            },
+            _ => None,
+        }
+    }
+
     fn find_root_index(tokens: &[Token]) -> usize {
         let mut root_index = 0;
         let mut weight = -1;
         for (i, t) in tokens.iter().enumerate() {
-            if let Some(x) = get_token_weight(t) {
+            if let Some(x) = Self::get_token_weight(t) {
                 if x >= weight {
                     weight = x;
                     root_index = i;
@@ -78,8 +93,11 @@ impl AST {
         root_index
     }
 
-    pub fn build_tree(tokens: &[Token]) -> Box<Self> {
+    pub fn build_tree(tokens: &[Token]) -> Result<Box<Self>, String> {
         let mut end = tokens.len();
+        if end == 0 {
+            Err("No tokens to parse")?
+        }
         if let Some(e) = tokens.iter().position(|x| x == &Token::EOL) {
             end = e;
         }
@@ -89,13 +107,13 @@ impl AST {
         let mut right: Option<Box<Self>> = None;
 
         if root_index > 0 {
-            left = Some(Self::build_tree(&tokens[..root_index]))
+            left = Some(Self::build_tree(&tokens[..root_index])?)
         }
         if root_index < tokens.len() - 1 {
-            right = Some(Self::build_tree(&tokens[(root_index + 1)..end]))
+            right = Some(Self::build_tree(&tokens[(root_index + 1)..end])?)
         }
 
-        Self::new(tokens[root_index].clone(), left, right)
+        Ok(Self::new(tokens[root_index].clone(), left, right))
     }
 }
 
@@ -107,20 +125,5 @@ impl Display for AST {
             (Some(x), None) => write!(f, "'{}' ({}, None)", self.value, (**x)),
             (Some(x), Some(y)) => write!(f, "'{}' ({}, {})", self.value, (**x), (**y)),
         }
-    }
-}
-
-fn get_token_weight(token: &Token) -> Option<i32> {
-    match token {
-        Token::Paren(_) => Some(0),
-        Token::Number(_) => Some(0),
-        Token::Variable(_) => Some(0),
-        Token::Operator(oper) => match oper {
-            Op::Add => Some(2),
-            Op::Sub => Some(2),
-            Op::Mult => Some(1),
-            Op::Div => Some(1),
-        },
-        _ => None,
     }
 }

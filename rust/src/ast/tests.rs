@@ -83,8 +83,8 @@ fn build_tree() {
         Token::new_number("10"),
     ];
 
-    let root: Box<AST> = AST::build_tree(&v);
-    let result = root.evaluate().expect("should be a real value");
+    let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
+    let result = root.evaluate().expect("the result should be a real value");
     assert_eq!(result, -4.609999999999999);
 }
 
@@ -105,7 +105,7 @@ fn build_tree1() {
         Token::EOL,
     ];
 
-    let root: Box<AST> = AST::build_tree(&v);
+    let root: Box<AST> = AST::build_tree(&v).expect("the tree should build successfully");
     let result = root.evaluate().expect("should be a real value");
     assert_eq!(result, -4.609999999999999);
 }

@@ -25,6 +25,10 @@ fn test_cases(lang: Lang) {
             "Unexpected character = at position 4\n5.2= *2\n   ^\n",
         ),
         ("(2 -9.0) / 3.0", "x0 = -2.3333333333333335\n"),
+        (
+            "10 + 7.( + 2",
+            "Unexpected character ( at position 8\n10 + 7.( + 2\n       ^\n",
+        ),
     ];
     run_tests(input_expected, &lang);
 }

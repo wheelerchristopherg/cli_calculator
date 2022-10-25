@@ -1,6 +1,6 @@
 use std::env;
 
-use cli_calculator::{main_loop, parse_expression};
+use cli_calculator::{evaluate_string_expression, main_loop};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -9,7 +9,7 @@ fn main() {
     } else if args.len() == 3 && args.get(1).unwrap_or(&"".to_owned()) == "--expression" {
         let default = "".to_owned();
         let e = args.get(2).unwrap_or(&default);
-        parse_expression(e);
+        println!("{}", evaluate_string_expression(e));
     } else {
         println!("invalid arguments");
     }
