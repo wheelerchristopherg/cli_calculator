@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[derive(Debug)]
 enum Lang {
     Python,
     Rust,
@@ -31,6 +32,7 @@ fn test_cases(lang: Lang) {
         ),
         ("10.2", "x0 = 10.2\n"),
         ("10.2+", "Invalid Expression\n"),
+        ("1/0", "Divide by Zero\n"),
     ];
     run_tests(input_expected, &lang);
 }
@@ -38,6 +40,8 @@ fn test_cases(lang: Lang) {
 fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
     let mut results = Vec::new();
     let line = "-".repeat(50);
+    let mut passed = 0;
+    let mut failed = 0;
 
     for &(input, _) in input_expected.iter() {
         results.push(run_command(&lang, input))
@@ -50,10 +54,20 @@ fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
         println!("expected: {expected:?}");
         if output != expected {
             println!("X");
+            failed += 1;
         } else {
             println!("\u{2713}");
+            passed += 1;
         }
     }
+    println!("{}", line);
+    println!(
+        "Lang: {:?}, Total: {}, Passed: {}, Failed: {}",
+        lang,
+        input_expected.len(),
+        passed,
+        failed
+    );
     println!("{}", line);
 
     for ((_, expected), output) in input_expected.iter().zip(results.iter()) {

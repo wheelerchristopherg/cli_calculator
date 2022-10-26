@@ -103,7 +103,10 @@ class Divide(Operator):
         self.value = "/"
 
     def evaluate(self, left, right):
-        return left / right
+        try:
+            return left / right
+        except:
+            raise Exception("Divide by Zero")
 
 
 class Plus(Operator):
