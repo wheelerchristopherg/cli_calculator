@@ -23,9 +23,7 @@ pub struct InvalidTokenError {
 
 impl InvalidTokenError {
     pub fn arrow(&self) -> String {
-        let mut s = " "
-            .to_owned()
-            .repeat((self.position - 1) + (self.value.len() - 1));
+        let mut s = " ".to_owned().repeat(self.position - 1);
         s.push('^');
         s
     }
@@ -71,7 +69,7 @@ enum CharType {
 pub struct TokenParser {
     current_state: State,
     expression: String,
-    token_offset: usize,
+    position: usize,
 }
 
 impl TokenParser {
@@ -82,24 +80,20 @@ impl TokenParser {
             Ok(TokenParser {
                 current_state: State::Initial,
                 expression: expression.clone(),
-                token_offset: 0,
+                position: 0,
             })
         }
     }
 
     pub fn get_tokens(&mut self) -> Result<Vec<Token>, InvalidTokenError> {
         let mut token_vec: Vec<Token> = vec![];
-        while self.token_offset < self.expression.len() {
-            let next = match self.next_token() {
-                Some(n) => n,
-                None => break,
-            };
+        while let Some(next) = self.next_token() {
             #[cfg(test)]
             println!("resolved token: {:?}", next);
             if next != Token::Whitespace {
                 if let Token::InvalidToken(s) = next {
                     Err(InvalidTokenError {
-                        position: self.token_offset,
+                        position: self.position + 1,
                         value: s,
                     })?
                 } else {
@@ -112,46 +106,40 @@ impl TokenParser {
 
     fn next_token(&mut self) -> Option<Token> {
         self.current_state = State::Initial;
+        let start = self.position;
         let mut resolved_token = None;
-        for (i, b) in self.expression[self.token_offset..].bytes().enumerate() {
-            let next_state = Self::transition(&self.current_state, &(b as char));
+        let mut exp = self.expression.clone();
+        exp.push('\n');
+
+        for next_char in exp[start..].chars() {
+            let next_state = Self::transition(&self.current_state, &next_char);
             match next_state {
                 None => {
                     #[cfg(test)]
                     println!("transition failed, resolving");
-                    let start = self.token_offset;
-                    let end = if i == 0 { 1 } else { i };
-                    resolved_token = Some(Self::token_from_state(
-                        &self.current_state,
-                        &self.expression[start..start + end],
-                    ));
-                    self.token_offset += end;
+                    let potential_token =
+                        Self::token_from_state(&self.current_state, &exp[start..self.position]);
+                    resolved_token = if let Token::InvalidToken(_) = potential_token {
+                        Some(Token::InvalidToken(next_char.to_string()))
+                    } else {
+                        Some(potential_token)
+                    };
                     break;
                 }
                 Some(state) => {
                     #[cfg(test)]
-                    println!("{:?} -> {:?}", self.current_state, state);
+                    println!("{:?} ({:?})-> {:?}", self.current_state, next_char, state);
                     self.current_state = state;
                 }
             }
-
-            if self.token_offset + i + 1 == self.expression.len() {
-                #[cfg(test)]
-                println!(
-                    "no more characters, resolving, state = {:?}",
-                    self.current_state
-                );
-                resolved_token = Some(Self::token_from_state(
-                    &self.current_state,
-                    &self.expression[self.token_offset..self.token_offset + i + 1],
-                ));
-                self.token_offset += i + 1;
-            }
+            self.position += 1;
         }
         resolved_token
     }
 
     fn token_from_state(state: &State, value: &str) -> Token {
+        #[cfg(test)]
+        println!("state: {:?}, value: {}", state, value);
         match state {
             State::Initial => Token::InvalidToken(value.to_owned()),
             State::FloatStart => Token::InvalidToken(value.to_owned()),
