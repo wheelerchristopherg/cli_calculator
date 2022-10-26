@@ -45,9 +45,9 @@ fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
 
     for ((input, expected), output) in input_expected.iter().zip(results.iter()) {
         println!("{}", line);
-        println!("input: {input}");
-        println!("output: {output}");
-        println!("expected: {expected}");
+        println!("input: {input:?}");
+        println!("output: {output:?}");
+        println!("expected: {expected:?}");
         if output != expected {
             println!("X");
         } else {
