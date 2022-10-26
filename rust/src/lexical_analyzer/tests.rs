@@ -43,6 +43,10 @@ fn parse_failed() {
         value: "(".to_owned(),
     };
     assert_eq!(result, expected);
+    let error_message = format!("{expected}");
+    let expected_error_message = "Unexpected character \"(\" at position 7";
+
+    assert_eq!(error_message, expected_error_message);
 }
 
 #[test]

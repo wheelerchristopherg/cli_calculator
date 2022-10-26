@@ -106,8 +106,8 @@ class TokenParser:
                 error_position += "^"
                 mono_char_text = text.replace("\t", " ")
                 raise UnexpectedCharacter(
-                    "Unexpected character {} at position {}\n{}\n{}".format(
-                        e.args[0], char_pos + 1, mono_char_text[:-1], error_position
+                    "Unexpected character \"{}\" at position {}\n{}\n{}".format(
+                        repr(e.args[0])[1:-1], char_pos + 1, mono_char_text[:-1], error_position
                     )
                 )
 

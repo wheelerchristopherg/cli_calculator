@@ -57,17 +57,6 @@ fn divide_by_zero() {
 }
 
 #[test]
-fn cannot_evaluate_paren() {
-    let left = AST::new(Token::new_number("19"), None, None);
-    let right = AST::new(Token::new_paren("("), None, None);
-    let root = AST::new(Token::new_op("/"), Some(left), Some(right));
-    let error = root
-        .evaluate()
-        .expect_err("should throw 'Cannot evaluate ('");
-    assert_eq!(error, "Cannot evaluate (");
-}
-
-#[test]
 fn build_tree() {
     let v = vec![
         Token::new_number("1.24"),
@@ -93,4 +82,16 @@ fn evaluate_single_number() {
     let root: Box<AST> = AST::build_tree(&v).expect("the tree should build successfully");
     let result = root.evaluate().expect("should be a real value");
     assert_eq!(result, 1.24);
+}
+
+#[test]
+fn invalid_tree() {
+    let v = vec![
+        Token::new_number("1"),
+        Token::new_op("-"),
+        Token::new_op("+"),
+        Token::EOL,
+    ];
+    let error_msg = AST::build_tree(&v).expect_err("Tree should fail to build");
+    assert_eq!(error_msg, "Invalid Expression");
 }

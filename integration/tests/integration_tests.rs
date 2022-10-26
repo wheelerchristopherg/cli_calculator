@@ -23,16 +23,17 @@ fn test_cases(lang: Lang) {
         ("5 *2", "x0 = 10\n"),
         (
             "5.2= *2",
-            "Unexpected character = at position 4\n5.2= *2\n   ^\n",
+            "Unexpected character \"=\" at position 4\n5.2= *2\n   ^\n",
         ),
         ("(2 -9.0) / 3.0", "x0 = -2.3333333333333335\n"),
         (
             "10 + 7.( + 2",
-            "Unexpected character ( at position 8\n10 + 7.( + 2\n       ^\n",
+            "Unexpected character \"(\" at position 8\n10 + 7.( + 2\n       ^\n",
         ),
         ("10.2", "x0 = 10.2\n"),
         ("10.2+", "Invalid Expression\n"),
         ("1/0", "Divide by Zero\n"),
+        ("1-+", "Invalid Expression\n"),
     ];
     run_tests(input_expected, &lang);
 }

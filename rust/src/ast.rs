@@ -21,6 +21,8 @@ impl AST {
         let result = match &self.value {
             Token::Number(num) => self.evaluate_number(&num)?,
             Token::Operator(oper) => self.evaluate_operator(&oper)?,
+            Token::Paren(_) => Err("Parenthetical expressions are not yet implemented")?,
+            Token::Variable(_) => Err("Variables are not yet implemented")?,
             x => Err(format!("Cannot evaluate {}", x))?,
         };
         Ok(result)
@@ -54,7 +56,7 @@ impl AST {
     fn evaluate_number(&self, num: &Num) -> Result<f64, String> {
         match (&self.left, &self.right) {
             (None, None) => (),
-            _ => Err(format!("Invalid Node: Number must be leaf"))?,
+            _ => Err(format!("Invalid Expression"))?,
         };
 
         let result = match num {
@@ -107,11 +109,16 @@ impl AST {
         let mut right: Option<Box<Self>> = None;
 
         if root_index > 0 {
-            left = Some(Self::build_tree(&tokens[..root_index]).map_err(|_| "".to_string())?)
+            left = Some(
+                Self::build_tree(&tokens[..root_index])
+                    .map_err(|_| "Invalid Expression".to_string())?,
+            )
         }
         if root_index > 0 && root_index < tokens.len() - 1 {
-            right =
-                Some(Self::build_tree(&tokens[(root_index + 1)..end]).map_err(|_| "".to_string())?)
+            right = Some(
+                Self::build_tree(&tokens[(root_index + 1)..end])
+                    .map_err(|_| "Invalid Expression".to_string())?,
+            )
         }
 
         Ok(Self::new(tokens[root_index].clone(), left, right))
