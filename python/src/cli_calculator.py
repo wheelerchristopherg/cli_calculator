@@ -89,7 +89,7 @@ def argument(expression):
         env.update(global_env)
         _tokens = parse_expression(parser, expression)
         result = evaluate_tokenized_expression(env, _tokens)
-        print("x0 = {}".format(result))
+        print("x0 = {}".format(result * 1.0))
     except Exception as e:
         print(e)
 

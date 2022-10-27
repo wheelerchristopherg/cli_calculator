@@ -20,7 +20,7 @@ fn test_cases(lang: Lang) {
     let input_expected = vec![
         ("hi", "Unknown Variable: hi\n"),
         ("x *2", "Unknown Variable: x\n"),
-        ("5 *2", "x0 = 10\n"),
+        ("5 *2", "x0 = 10.0\n"),
         (
             "5.2= *2",
             "Unexpected character \"=\" at position 4\n5.2= *2\n   ^\n",
@@ -34,6 +34,9 @@ fn test_cases(lang: Lang) {
         ("10.2+", "Invalid Expression\n"),
         ("1/0", "Divide by Zero\n"),
         ("1-+", "Invalid Expression\n"),
+        ("10.0", "x0 = 10.0\n"),
+        ("10 * 2.0", "x0 = 20.0\n"),
+        ("10", "x0 = 10.0\n"),
     ];
     run_tests(input_expected, &lang);
 }
@@ -54,10 +57,10 @@ fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
         println!("output: {output:?}");
         println!("expected: {expected:?}");
         if output != expected {
-            println!("X");
+            println!("\x1b[0;31mX\x1b[0m");
             failed += 1;
         } else {
-            println!("\u{2713}");
+            println!("\x1b[0;32m\u{2713}\x1b[0m");
             passed += 1;
         }
     }

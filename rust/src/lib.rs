@@ -32,7 +32,13 @@ pub fn evaluate_string_expression(expression: &String) -> String {
     };
 
     match tree.evaluate() {
-        Ok(result) => format!("x0 = {}", result),
+        Ok(result) => {
+            if result == result.floor() {
+                format!("x0 = {}.0", result)
+            } else {
+                format!("x0 = {}", result)
+            }
+        }
         Err(e) => return e,
     }
 }
