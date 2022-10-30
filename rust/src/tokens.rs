@@ -95,20 +95,14 @@ impl Token {
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Paren(x) => match x {
-                ParenType::OpenParen => write!(f, "("),
-                ParenType::CloseParen => write!(f, ")"),
-            },
-            Token::Number(x) => match x {
-                Num::Float(x) => write!(f, "{}", x),
-                Num::Integer(x) => write!(f, "{}", x),
-            },
-            Token::Operator(oper) => match oper {
-                Op::Add => write!(f, "+"),
-                Op::Sub => write!(f, "-"),
-                Op::Mult => write!(f, "*"),
-                Op::Div => write!(f, "/"),
-            },
+            Token::Paren(ParenType::OpenParen) => write!(f, "("),
+            Token::Paren(ParenType::CloseParen) => write!(f, ")"),
+            Token::Number(Num::Float(x)) => write!(f, "{}", x),
+            Token::Number(Num::Integer(x)) => write!(f, "{}", x),
+            Token::Operator(Op::Add) => write!(f, "+"),
+            Token::Operator(Op::Sub) => write!(f, "-"),
+            Token::Operator(Op::Mult) => write!(f, "*"),
+            Token::Operator(Op::Div) => write!(f, "/"),
             Token::Variable(x) => write!(f, "{}", x),
             Token::Whitespace => write!(f, "''"),
             Token::EOL => write!(f, "EoL"),
