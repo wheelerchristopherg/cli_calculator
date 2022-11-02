@@ -54,10 +54,9 @@ impl AST {
     }
 
     fn evaluate_number(&self, num: &Num) -> Result<f64, String> {
-        match (&self.left, &self.right) {
-            (None, None) => (),
-            _ => Err(format!("Invalid Expression"))?,
-        };
+        if self.left.is_some() || self.right.is_some() {
+            return Err("Invalid Expression".to_string());
+        }
 
         let result = match num {
             Num::Float(x) => *x,
