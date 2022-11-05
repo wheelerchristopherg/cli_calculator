@@ -12,7 +12,7 @@ pub fn main_loop() {
     loop {
         if let Ok(expression) = read_line("> ") {
             let exp = expression.trim();
-            if exp == "" || exp == "q" {
+            if exp.is_empty() || exp == "q" {
                 break;
             }
             println!("{}", evaluate_string_expression(&expression));
@@ -20,7 +20,7 @@ pub fn main_loop() {
     }
 }
 
-pub fn evaluate_string_expression(expression: &String) -> String {
+pub fn evaluate_string_expression(expression: &str) -> String {
     let parsed_tokens: Vec<Token> = match parse_tokens(expression) {
         Ok(parsed) => parsed,
         Err(e) => return e,
@@ -39,11 +39,11 @@ pub fn evaluate_string_expression(expression: &String) -> String {
                 format!("x0 = {}", result)
             }
         }
-        Err(e) => return e,
+        Err(e) => e,
     }
 }
 
-fn parse_tokens(expression: &String) -> Result<Vec<Token>, String> {
+fn parse_tokens(expression: &str) -> Result<Vec<Token>, String> {
     let mut parser =
         TokenParser::new(expression).map_err(|_| "Expression contains non-ascii characters.")?;
 

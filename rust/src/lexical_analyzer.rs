@@ -4,7 +4,7 @@ mod tests;
 use crate::tokens::Token;
 use std::{error::Error, fmt::Display};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct NotAsciiError;
 
 impl Display for NotAsciiError {
@@ -15,7 +15,7 @@ impl Display for NotAsciiError {
 
 impl Error for NotAsciiError {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct InvalidTokenError {
     pub position: usize,
     pub value: String,
@@ -53,7 +53,7 @@ enum State {
     Multiply,
     Divide,
     Float,
-    EOL,
+    Eol,
     Whitespace,
     Variable,
 }
@@ -73,13 +73,13 @@ pub struct TokenParser {
 }
 
 impl TokenParser {
-    pub fn new(expression: &String) -> Result<TokenParser, NotAsciiError> {
+    pub fn new(expression: &str) -> Result<TokenParser, NotAsciiError> {
         if !expression.is_ascii() {
             Err(NotAsciiError)
         } else {
             Ok(TokenParser {
                 current_state: State::Initial,
-                expression: expression.clone(),
+                expression: String::from(expression),
                 position: 0,
             })
         }
@@ -143,7 +143,7 @@ impl TokenParser {
         match state {
             State::Initial => Token::InvalidToken(value.to_owned()),
             State::FloatStart => Token::InvalidToken(value.to_owned()),
-            State::EOL => Token::EOL,
+            State::Eol => Token::EOL,
             State::Variable => Token::new_variable(value),
             State::Integer => Token::new_number(value),
             State::Float => Token::new_number(value),
@@ -168,7 +168,7 @@ impl TokenParser {
             (State::Initial, CharType::Other('+')) => Some(State::Plus),
             (State::Initial, CharType::Other('*')) => Some(State::Multiply),
             (State::Initial, CharType::Other('/')) => Some(State::Divide),
-            (State::Initial, CharType::Other('\n')) => Some(State::EOL),
+            (State::Initial, CharType::Other('\n')) => Some(State::Eol),
             (State::Initial, CharType::Whitespace) => Some(State::Whitespace),
             (State::Initial, CharType::Letter) => Some(State::Variable),
             (State::Initial, CharType::Other('_')) => Some(State::Variable),

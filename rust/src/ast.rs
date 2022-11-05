@@ -19,8 +19,8 @@ impl AST {
 
     pub fn evaluate(&self) -> Result<f64, String> {
         let result = match &self.value {
-            Token::Number(num) => self.evaluate_number(&num)?,
-            Token::Operator(oper) => self.evaluate_operator(&oper)?,
+            Token::Number(num) => self.evaluate_number(num)?,
+            Token::Operator(oper) => self.evaluate_operator(oper)?,
             Token::Paren(_) => Err("Parenthetical expressions are not yet implemented")?,
             Token::Variable(_) => Err("Variables are not yet implemented")?,
             x => Err(format!("Cannot evaluate {}", x))?,
@@ -32,12 +32,12 @@ impl AST {
         let l = self
             .left
             .as_deref()
-            .ok_or("Invalid Expression".to_owned())?
+            .ok_or_else(|| "Invalid Expression".to_owned())?
             .evaluate()?;
         let r = self
             .right
             .as_deref()
-            .ok_or("Invalid Expression".to_owned())?
+            .ok_or_else(|| "Invalid Expression".to_owned())?
             .evaluate()?;
         let result = match oper {
             Op::Add => l + r,

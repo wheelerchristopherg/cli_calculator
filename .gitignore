@@ -1,3 +1,5 @@
 integration/target
 rust/target
 python/src/__pycache__
+.vscode
+*/.vscode

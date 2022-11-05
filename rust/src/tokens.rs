@@ -3,7 +3,7 @@ use std::fmt::Display;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParenType {
     OpenParen,
     CloseParen,
@@ -15,7 +15,7 @@ pub enum Num {
     Integer(i64),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Op {
     Add,
     Sub,
