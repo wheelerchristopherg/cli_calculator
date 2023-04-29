@@ -21,11 +21,17 @@ pub fn main_loop() {
             if exp.is_empty() || exp == "q" {
                 break;
             }
-            println!(
-                "{}",
-                evaluate_string_expression(&expression, &mut env, result_index)
-            );
-            result_index += 1;
+
+            let result = evaluate_string_expression(&expression, &mut env, result_index);
+            match result {
+                Ok(value) => {
+                    println!("{}", value);
+                    result_index += 1;
+                }
+                Err(e) => {
+                    println!("{}", e);
+                }
+            }
         }
     }
 }
@@ -34,15 +40,15 @@ pub fn evaluate_string_expression(
     expression: &str,
     env: &mut HashMap<String, Box<AST>>,
     index: i32,
-) -> String {
+) -> Result<String, String> {
     let parsed_tokens: Vec<Token> = match parse_tokens(expression) {
         Ok(parsed) => parsed,
-        Err(e) => return e,
+        Err(e) => return Err(e),
     };
 
     let tree: Box<AST> = match AST::build_tree(&parsed_tokens) {
         Ok(parsed) => parsed,
-        Err(e) => return e,
+        Err(e) => return Err(e),
     };
 
     match tree.evaluate(env) {
@@ -50,12 +56,12 @@ pub fn evaluate_string_expression(
             let result_ast = AST::new_leaf(Token::new_number(&result.to_string()));
             env.insert(format!("x{}", index), result_ast);
             if result == result.floor() {
-                format!("x{} = {}.0", index, result)
+                Ok(format!("x{} = {}.0", index, result))
             } else {
-                format!("x{} = {}", index, result)
+                Ok(format!("x{} = {}", index, result))
             }
         }
-        Err(e) => e,
+        Err(e) => Err(e),
     }
 }
 

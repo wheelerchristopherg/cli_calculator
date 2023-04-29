@@ -78,7 +78,11 @@ impl AST {
             return Err("Invalid Expression".to_string());
         }
 
-        env[var].evaluate(env)
+        if let Some(value) = env.get(var) {
+            value.evaluate(env)
+        } else {
+            Err(format!("Unknown Variable: {}", var))
+        }
     }
 
     fn get_token_weight(token: &Token) -> Option<i32> {

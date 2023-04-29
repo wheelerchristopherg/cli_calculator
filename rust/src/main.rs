@@ -10,7 +10,10 @@ fn main() {
         let default = "".to_owned();
         let e = args.get(2).unwrap_or(&default);
         let mut env = HashMap::new();
-        println!("{}", evaluate_string_expression(e, &mut env, 0));
+        match evaluate_string_expression(e, &mut env, 0) {
+            Ok(value) => println!("{}", value),
+            Err(e) => println!("{}", e),
+        }
     } else {
         println!("invalid arguments");
     }
