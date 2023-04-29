@@ -77,7 +77,7 @@ def interactive():
             print(e)
             continue
         history.append(result)
-        print("x{} = {}".format(len(history) - 1, result))
+        print("x{} = {}".format(len(history) - 1, result * 1.0))
 
 
 def argument(expression):
