@@ -1,4 +1,4 @@
-use std::env;
+use std::{collections::HashMap, env};
 
 use cli_calculator::{evaluate_string_expression, main_loop};
 
@@ -9,7 +9,8 @@ fn main() {
     } else if args.len() == 3 && args.get(1).unwrap_or(&"".to_owned()) == "--expression" {
         let default = "".to_owned();
         let e = args.get(2).unwrap_or(&default);
-        println!("{}", evaluate_string_expression(e));
+        let mut env = HashMap::new();
+        println!("{}", evaluate_string_expression(e, &mut env, 0));
     } else {
         println!("invalid arguments");
     }

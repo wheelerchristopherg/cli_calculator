@@ -2,25 +2,39 @@ pub mod ast;
 pub mod lexical_analyzer;
 pub mod tokens;
 
-use std::io::{self, Write};
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+};
 
 use ast::AST;
 use lexical_analyzer::TokenParser;
 use tokens::Token;
 
 pub fn main_loop() {
+    let mut env = HashMap::new();
+    env.insert("pi".to_owned(), AST::new_leaf(Token::new_number("3.14159")));
+    let mut result_index = 0;
     loop {
         if let Ok(expression) = read_line("> ") {
             let exp = expression.trim();
             if exp.is_empty() || exp == "q" {
                 break;
             }
-            println!("{}", evaluate_string_expression(&expression));
+            println!(
+                "{}",
+                evaluate_string_expression(&expression, &mut env, result_index)
+            );
+            result_index += 1;
         }
     }
 }
 
-pub fn evaluate_string_expression(expression: &str) -> String {
+pub fn evaluate_string_expression(
+    expression: &str,
+    env: &mut HashMap<String, Box<AST>>,
+    index: i32,
+) -> String {
     let parsed_tokens: Vec<Token> = match parse_tokens(expression) {
         Ok(parsed) => parsed,
         Err(e) => return e,
@@ -31,12 +45,14 @@ pub fn evaluate_string_expression(expression: &str) -> String {
         Err(e) => return e,
     };
 
-    match tree.evaluate() {
+    match tree.evaluate(env) {
         Ok(result) => {
+            let result_ast = AST::new_leaf(Token::new_number(&result.to_string()));
+            env.insert(format!("x{}", index), result_ast);
             if result == result.floor() {
-                format!("x0 = {}.0", result)
+                format!("x{} = {}.0", index, result)
             } else {
-                format!("x0 = {}", result)
+                format!("x{} = {}", index, result)
             }
         }
         Err(e) => e,

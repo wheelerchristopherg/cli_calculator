@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::tokens::{Num, Op, Token};
-use std::{boxed::Box, fmt::Display};
+use std::{boxed::Box, collections::HashMap, fmt::Display};
 
 #[derive(Debug)]
 pub struct AST {
@@ -17,28 +17,32 @@ impl AST {
         Box::new(ast)
     }
 
-    pub fn evaluate(&self) -> Result<f64, String> {
+    pub fn new_leaf(value: Token) -> Box<Self> {
+        Self::new(value, None, None)
+    }
+
+    pub fn evaluate(&self, env: &HashMap<String, Box<AST>>) -> Result<f64, String> {
         let result = match &self.value {
             Token::Number(num) => self.evaluate_number(num)?,
-            Token::Operator(oper) => self.evaluate_operator(oper)?,
+            Token::Operator(oper) => self.evaluate_operator(oper, env)?,
             Token::Paren(_) => Err("Parenthetical expressions are not yet implemented")?,
-            Token::Variable(_) => Err("Variables are not yet implemented")?,
+            Token::Variable(var) => self.evaluate_variable(var, env)?,
             x => Err(format!("Cannot evaluate {}", x))?,
         };
         Ok(result)
     }
 
-    fn evaluate_operator(&self, oper: &Op) -> Result<f64, String> {
+    fn evaluate_operator(&self, oper: &Op, env: &HashMap<String, Box<AST>>) -> Result<f64, String> {
         let l = self
             .left
             .as_deref()
             .ok_or_else(|| "Invalid Expression".to_owned())?
-            .evaluate()?;
+            .evaluate(env)?;
         let r = self
             .right
             .as_deref()
             .ok_or_else(|| "Invalid Expression".to_owned())?
-            .evaluate()?;
+            .evaluate(env)?;
         let result = match oper {
             Op::Add => l + r,
             Op::Sub => l - r,
@@ -63,6 +67,18 @@ impl AST {
             Num::Integer(x) => *x as f64,
         };
         Ok(result)
+    }
+
+    fn evaluate_variable(
+        &self,
+        var: &String,
+        env: &HashMap<String, Box<AST>>,
+    ) -> Result<f64, String> {
+        if self.left.is_some() || self.right.is_some() {
+            return Err("Invalid Expression".to_string());
+        }
+
+        env[var].evaluate(env)
     }
 
     fn get_token_weight(token: &Token) -> Option<i32> {
