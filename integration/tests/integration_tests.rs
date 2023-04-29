@@ -38,6 +38,7 @@ fn test_cases(lang: Lang) {
         ("10 * 2.0", "x0 = 20.0\n"),
         ("10", "x0 = 10.0\n"),
         ("10/2+3*4-6/3", "x0 = 15.0\n"),
+        ("10.2.0", "Invalid Expression\n"),
     ];
     run_tests(input_expected, &lang);
 }
@@ -88,7 +89,7 @@ fn run_command(language: &Lang, expression: &str) -> String {
 
     let output = executable
         .arg("--expression")
-        .arg(format!("{}", expression))
+        .arg(expression)
         .output()
         .unwrap();
     String::from(String::from_utf8_lossy(&output.stdout))
