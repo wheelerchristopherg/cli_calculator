@@ -114,3 +114,17 @@ fn single_token_expression() {
     let expected = vec![Token::new_number("1.3"), Token::EOL];
     assert_eq!(t, expected);
 }
+
+#[test]
+fn multiple_decimals() {
+    let expression = String::from("1.3.10.34");
+    let mut parser = TokenParser::new(&expression).unwrap();
+    let t: Vec<Token> = parser.get_tokens().expect("should parse successfully");
+    let expected = vec![
+        Token::new_number("1.3"),
+        Token::new_number("0.10"),
+        Token::new_number("0.34"),
+    ];
+    println!("{:?}", t);
+    assert_eq!(t, expected);
+}
