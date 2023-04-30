@@ -8,7 +8,7 @@ Possible future implementations may be in C, C++, Scala, maybe Go.
 # Usage
 ## Python
 * run cli_calculator in python/src
-  * This should be completely self contained and does not require an dependencies.
+  * This should be completely self contained and does not require any dependencies.
   * Tested with python 3.10.
 
 ## Rust
