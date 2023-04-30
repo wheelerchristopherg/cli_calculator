@@ -10,10 +10,19 @@ fn main() {
         let default = "".to_owned();
         let e = args.get(2).unwrap_or(&default);
         let mut env = HashMap::new();
-        match evaluate_string_expression(e, &mut env, 0) {
-            Ok(value) => println!("{}", value),
-            Err(e) => println!("{}", e),
+        let mut output = String::new();
+        let mut index = 0;
+        for expression in e.split(';') {
+            match evaluate_string_expression(expression, &mut env, index) {
+                Ok(value) => {
+                    output.push_str(&value.to_string());
+                    index += 1;
+                }
+                Err(e) => output.push_str(&e.to_string()),
+            };
+            output.push('\n');
         }
+        print!("{}", output);
     } else {
         println!("invalid arguments");
     }

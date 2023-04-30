@@ -41,6 +41,10 @@ fn test_cases(lang: Lang) {
         ("10.2.0", "Invalid Expression\n"),
         ("(10/ 2.5", "Missing )\n"),
         ("10/ 2.5)", "Extra )\n"),
+        (
+            "10 + 2;x0 / 2);x1 / 2; x0 / 2;10 = 2",
+            "x0 = 12.0\nExtra )\nUnknown Variable: x1\nx1 = 6.0\nUnexpected character \"=\" at position 4\n10 = 2\n   ^\n",
+        ),
     ];
     run_tests(input_expected, &lang);
 }

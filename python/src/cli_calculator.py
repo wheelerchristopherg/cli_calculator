@@ -83,15 +83,20 @@ def interactive():
 def argument(expression):
     global_env = {"g": 9.81, "feet_per_meter": 3.28084, "cm_per_inch": 2.54}
     history = []
+    output = ""
     parser = lexical_analyzer.TokenParser()
-    try:
-        env = build_env_from_history(history)
-        env.update(global_env)
-        _tokens = parse_expression(parser, expression)
-        result = evaluate_tokenized_expression(env, _tokens)
-        print("x0 = {}".format(result * 1.0))
-    except Exception as e:
-        print(e)
+    for e in expression.split(';'):
+        try:
+            env = build_env_from_history(history)
+            env.update(global_env)
+            _tokens = parse_expression(parser, e)
+            result = evaluate_tokenized_expression(env, _tokens)
+            output += "x{} = {}".format(len(history), result * 1.0) + "\n"
+        except Exception as e:
+            output += str(e) + "\n"
+            continue
+        history.append(result)
+    print(output[:-1])
 
 
 def main():
