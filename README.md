@@ -1,8 +1,7 @@
 # cli_calculator
 A CLI calculator that parses and solves arithmetic expressions while respecting order of operations.
 
-This is mostly a project initially intended for learning how to do basic arithmetic expression parsing.
-I'm currently working on a rust port. 
+This is mostly a project initially intended for learning how to do basic arithmetic expression parsing. Once I finished implementing the parser in python, I wanted to use this as an exercise for learning other languages. I'm currently working on a rust port. 
 
 Possible future implementations may be in C, C++, Scala, maybe Go.
 
