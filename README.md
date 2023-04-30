@@ -26,6 +26,6 @@ From here, you can enter any arithmetic expression such as:
 
 The result of each of these expressions will be given in the form: `x0 = 15.0`
 
-You can also use previous results in subsequent expressions. For example if you enter `10 + 3` you will receive the result `x0 = 13.0`, then if you enter `x0 / 2` you will receive the result `x1 = 6.5`
+You can also use previous results in subsequent expressions. For example if you enter `10 + 3` you will receive the result `x0 = 13.0`, then if you enter `x0 / 2` you will receive the result `x1 = 6.5`.
 
 To gracefully quit, just enter an empty expression.
