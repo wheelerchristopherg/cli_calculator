@@ -39,6 +39,8 @@ fn test_cases(lang: Lang) {
         ("10", "x0 = 10.0\n"),
         ("10/2+3*4-6/3", "x0 = 15.0\n"),
         ("10.2.0", "Invalid Expression\n"),
+        ("(10/ 2.5", "Missing )\n"),
+        ("10/ 2.5)", "Extra )\n"),
     ];
     run_tests(input_expected, &lang);
 }

@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::tokens::{Num, Op, ParenType, Token};
-use std::{boxed::Box, collections::HashMap, fmt::Display};
+use std::{boxed::Box, cmp::Ordering, collections::HashMap, fmt::Display};
 
 #[derive(Debug)]
 pub struct AST {
@@ -121,8 +121,10 @@ impl AST {
     }
 
     pub fn build_tree(tokens: &[Token]) -> Result<Box<Self>, String> {
-        let weighted_tokens: &[WeightedToken] = &Self::adjust_weights(tokens).unwrap();
-        Self::build_tree_weighted(weighted_tokens)
+        match Self::adjust_weights(tokens) {
+            Ok(weighted_tokens) => Self::build_tree_weighted(&weighted_tokens),
+            Err(e) => Err(e),
+        }
     }
 
     fn build_tree_weighted(tokens: &[WeightedToken]) -> Result<Box<Self>, String> {
@@ -177,10 +179,10 @@ impl AST {
             }
         }
 
-        if level != 0 {
-            Err("Mismatched parenthases".to_string())
-        } else {
-            Ok(weighted_tokens)
+        match level.cmp(&0) {
+            Ordering::Greater => Err("Extra )".to_string()),
+            Ordering::Less => Err("Missing )".to_string()),
+            Ordering::Equal => Ok(weighted_tokens),
         }
     }
 }
