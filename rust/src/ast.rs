@@ -121,10 +121,7 @@ impl AST {
     }
 
     pub fn build_tree(tokens: &[Token]) -> Result<Box<Self>, String> {
-        match Self::adjust_weights(tokens) {
-            Ok(weighted_tokens) => Self::build_tree_weighted(&weighted_tokens),
-            Err(e) => Err(e),
-        }
+        Self::build_tree_weighted(&Self::process_parens(tokens)?)
     }
 
     fn build_tree_weighted(tokens: &[WeightedToken]) -> Result<Box<Self>, String> {
@@ -156,16 +153,27 @@ impl AST {
         Ok(Self::new(tokens[root_index].token.clone(), left, right))
     }
 
-    fn adjust_weights(tokens: &[Token]) -> Result<Vec<WeightedToken>, String> {
+    fn process_parens(tokens: &[Token]) -> Result<Vec<WeightedToken>, String> {
         let mut level = 0;
         let mut weighted_tokens: Vec<WeightedToken> = vec![];
+        let mut paren_stack: Vec<i32> = vec![];
+        let mut previous_token: Option<Token> = None;
         for token in tokens.iter() {
             let weighted_token: Option<WeightedToken> = match token {
                 Token::Paren(ParenType::OpenParen) => {
                     level -= 10;
+                    paren_stack.push(level);
                     None
                 }
                 Token::Paren(ParenType::CloseParen) => {
+                    if let Some(popped) = paren_stack.pop() {
+                        if popped != level {
+                            return Err("Extra )".to_string());
+                        }
+                    } else {
+                        return Err("Extra )".to_string());
+                    }
+
                     level += 10;
                     None
                 }
@@ -174,9 +182,32 @@ impl AST {
                     weight: level,
                 }),
             };
+
+            let (implied_multiply, implied_level) = match (previous_token, token) {
+                (Some(Token::Number(_)), Token::Paren(ParenType::OpenParen)) => (true, level + 10),
+                (Some(Token::Variable(_)), Token::Paren(ParenType::OpenParen)) => {
+                    (true, level + 10)
+                }
+                (Some(Token::Paren(ParenType::CloseParen)), Token::Paren(ParenType::OpenParen)) => {
+                    (true, level + 10)
+                }
+                (Some(Token::Paren(ParenType::CloseParen)), Token::Number(_)) => (true, level),
+                (Some(Token::Paren(ParenType::CloseParen)), Token::Variable(_)) => (true, level),
+                _ => (false, 0),
+            };
+
+            if implied_multiply {
+                weighted_tokens.push(WeightedToken {
+                    token: Token::Operator(Op::Mult),
+                    weight: implied_level,
+                });
+            }
+
             if let Some(t) = weighted_token {
                 weighted_tokens.push(t.clone());
             }
+
+            previous_token = Some(token.clone());
         }
 
         match level.cmp(&0) {

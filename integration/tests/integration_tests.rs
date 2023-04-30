@@ -39,14 +39,18 @@ fn test_cases(lang: Lang) {
         ("10", "x0 = 10.0\n"),
         ("10/2+3*4-6/3", "x0 = 15.0\n"),
         ("10.2.0", "Invalid Expression\n"),
-        ("(10/ 2.5", "Missing )\n"),
-        ("10/ 2.5)", "Extra )\n"),
+        ("(10/ 2.5;10/ 2.5)", "Missing )\nExtra )\n"),
         (
             "10 + 2;x0 / 2);x1 / 2; x0 / 2;10 = 2",
             "x0 = 12.0\nExtra )\nUnknown Variable: x1\nx1 = 6.0\nUnexpected character \"=\" at position 4\n10 = 2\n   ^\n",
         ),
         ("10(2 + 3)", "x0 = 50.0\n"),
         ("(2 + 3)10", "x0 = 50.0\n"),
+        (
+            "10 + () - 3; 10 + (); 10 * (); 10 / (); 10 ()",
+            "Invalid Expression\nInvalid Expression\nInvalid Expression\nInvalid Expression\nInvalid Expression\n"
+        ),
+        ("(10 * ", "Missing )\n"),
     ];
     run_tests(input_expected, &lang);
 }
@@ -58,7 +62,7 @@ fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
     let mut failed = 0;
 
     for &(input, _) in input_expected.iter() {
-        results.push(run_command(&lang, input))
+        results.push(run_command(lang, input))
     }
 
     for ((input, expected), output) in input_expected.iter().zip(results.iter()) {
