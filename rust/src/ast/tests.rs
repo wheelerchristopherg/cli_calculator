@@ -82,6 +82,7 @@ fn build_tree() {
     ];
     let env = HashMap::new();
     let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
+    println!("AST: {}", root);
     let result = root
         .evaluate(&env)
         .expect("the result should be a real value");
@@ -105,7 +106,6 @@ fn invalid_tree() {
         Token::new_op("+"),
         Token::EOL,
     ];
-    // let env = HashMap::new();
     let error_msg = AST::build_tree(&v).expect_err("Tree should fail to build");
     assert_eq!(error_msg, "Invalid Expression");
 }
@@ -135,6 +135,7 @@ fn evaluate_paren() {
     ];
     let env = HashMap::new();
     let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
+    println!("AST: {}", root);
     let result = root
         .evaluate(&env)
         .expect("the result should be a real value");
@@ -158,4 +159,56 @@ fn evaluate_variables() {
         .evaluate(&env)
         .expect("the result should be a real value");
     assert_eq!(result, 19.2);
+}
+
+#[test]
+fn evaluate_paren_missing_close_paren() {
+    let v = vec![
+        Token::new_paren("("),
+        Token::new_number("10"),
+        Token::new_op("+"),
+        Token::new_paren("("),
+        Token::new_number("9"),
+        Token::new_op("-"),
+        Token::new_number("19"),
+        Token::new_paren(")"),
+        Token::new_op("*"),
+        Token::new_paren("("),
+        Token::new_number("10"),
+        Token::new_op("+"),
+        Token::new_number("5"),
+        Token::new_paren(")"),
+        Token::new_op("-"),
+        Token::new_number("120"),
+        Token::new_op("/"),
+        Token::new_number("10"),
+    ];
+    let error: String = AST::build_tree(&v).expect_err("The tree should fail to build.");
+    assert_eq!(error, "Missing )");
+}
+
+#[test]
+fn evaluate_paren_too_many_close_paren() {
+    let v = vec![
+        Token::new_number("10"),
+        Token::new_op("+"),
+        Token::new_paren("("),
+        Token::new_number("9"),
+        Token::new_op("-"),
+        Token::new_number("19"),
+        Token::new_paren(")"),
+        Token::new_op("*"),
+        Token::new_paren("("),
+        Token::new_number("10"),
+        Token::new_op("+"),
+        Token::new_number("5"),
+        Token::new_paren(")"),
+        Token::new_op("-"),
+        Token::new_number("120"),
+        Token::new_paren(")"),
+        Token::new_op("/"),
+        Token::new_number("10"),
+    ];
+    let error: String = AST::build_tree(&v).expect_err("The tree should fail to build.");
+    assert_eq!(error, "Extra )");
 }

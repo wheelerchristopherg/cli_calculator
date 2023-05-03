@@ -17,6 +17,34 @@ struct WeightedToken {
     weight: i32,
 }
 
+impl Display for WeightedToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({},{})", self.token, self.weight)
+    }
+}
+
+struct WeightedSliceWrapper<'a>(&'a [WeightedToken]);
+
+impl Display for WeightedSliceWrapper<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for t in self.0.iter() {
+            write!(f, "({}, {})", t.token, t.weight)?
+        }
+        write!(f, "")
+    }
+}
+
+struct TokenSliceWrapper<'a>(&'a [Token]);
+
+impl Display for TokenSliceWrapper<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for t in self.0.iter() {
+            write!(f, " {} ", t)?
+        }
+        write!(f, "")
+    }
+}
+
 impl AST {
     fn new(value: Token, left: Option<Box<AST>>, right: Option<Box<AST>>) -> Box<Self> {
         let ast = AST { left, right, value };
@@ -93,14 +121,14 @@ impl AST {
 
     fn get_token_weight(token: &WeightedToken) -> Option<i32> {
         match &token.token {
-            Token::Paren(_) => Some(token.weight),
-            Token::Number(_) => Some(token.weight),
-            Token::Variable(_) => Some(token.weight),
+            Token::Paren(_) => Some(token.weight - 2),
+            Token::Number(_) => Some(token.weight - 2),
+            Token::Variable(_) => Some(token.weight - 2),
             Token::Operator(oper) => match oper {
-                Op::Add => Some(token.weight + 2),
-                Op::Sub => Some(token.weight + 2),
-                Op::Mult => Some(token.weight + 1),
-                Op::Div => Some(token.weight + 1),
+                Op::Add => Some(token.weight),
+                Op::Sub => Some(token.weight),
+                Op::Mult => Some(token.weight - 1),
+                Op::Div => Some(token.weight - 1),
             },
             _ => None,
         }
@@ -109,6 +137,7 @@ impl AST {
     fn find_root_index(tokens: &[WeightedToken]) -> usize {
         let mut root_index = 0;
         let mut weight = i32::MIN;
+        println!("finding root of: {}", WeightedSliceWrapper(tokens));
         for (i, t) in tokens.iter().enumerate() {
             if let Some(x) = Self::get_token_weight(t) {
                 if x >= weight {
@@ -134,6 +163,7 @@ impl AST {
         }
 
         let root_index = Self::find_root_index(tokens);
+        println!("root: {}, {}", root_index, tokens[root_index].token);
         let mut left: Option<Box<Self>> = None;
         let mut right: Option<Box<Self>> = None;
 
@@ -153,15 +183,51 @@ impl AST {
         Ok(Self::new(tokens[root_index].token.clone(), left, right))
     }
 
+    fn _build_tree_weighted(tokens: &[WeightedToken]) -> Result<Box<Self>, String> {
+        let mut end = tokens.len();
+        if end == 0 {
+            Err("No tokens to parse")?
+        }
+        if let Some(e) = tokens.iter().position(|x| x.token == Token::EOL) {
+            end = e;
+        }
+
+        let mut tree: Vec<Token> = vec![];
+        let mut stack: Vec<(usize, usize)> = vec![];
+        stack.push((0, end));
+
+        while !stack.is_empty() {
+            let (s, e) = stack.pop().unwrap();
+            println!("start: {}, end: {}", s, e);
+            let root_index = s + Self::find_root_index(&tokens[s..e]);
+            println!("root_index: {}", root_index);
+            let t = tokens[root_index].token.clone();
+            println!("token: {}", t);
+            tree.push(t);
+
+            if root_index > s && root_index < e - 1 {
+                stack.push(((root_index + 1), e));
+                stack.push((s, root_index));
+            }
+
+            println!();
+        }
+        println!("tree stack: {}", TokenSliceWrapper(&tree));
+
+        Err("Not Implemented".to_string())
+        // Ok(Self::new(tokens[root_index].token.clone(), left, right))
+    }
+
     fn process_parens(tokens: &[Token]) -> Result<Vec<WeightedToken>, String> {
         let mut level = 0;
         let mut weighted_tokens: Vec<WeightedToken> = vec![];
         let mut paren_stack: Vec<i32> = vec![];
         let mut previous_token: Option<Token> = None;
         for token in tokens.iter() {
+            const WEIGHT_OFFSET: i32 = 3;
             let weighted_token: Option<WeightedToken> = match token {
                 Token::Paren(ParenType::OpenParen) => {
-                    level -= 10;
+                    level -= WEIGHT_OFFSET;
                     paren_stack.push(level);
                     None
                 }
@@ -174,7 +240,7 @@ impl AST {
                         return Err("Extra )".to_string());
                     }
 
-                    level += 10;
+                    level += WEIGHT_OFFSET;
                     None
                 }
                 _ => Some(WeightedToken {
@@ -184,12 +250,14 @@ impl AST {
             };
 
             let (implied_multiply, implied_level) = match (previous_token, token) {
-                (Some(Token::Number(_)), Token::Paren(ParenType::OpenParen)) => (true, level + 10),
+                (Some(Token::Number(_)), Token::Paren(ParenType::OpenParen)) => {
+                    (true, level + WEIGHT_OFFSET)
+                }
                 (Some(Token::Variable(_)), Token::Paren(ParenType::OpenParen)) => {
-                    (true, level + 10)
+                    (true, level + WEIGHT_OFFSET)
                 }
                 (Some(Token::Paren(ParenType::CloseParen)), Token::Paren(ParenType::OpenParen)) => {
-                    (true, level + 10)
+                    (true, level + WEIGHT_OFFSET)
                 }
                 (Some(Token::Paren(ParenType::CloseParen)), Token::Number(_)) => (true, level),
                 (Some(Token::Paren(ParenType::CloseParen)), Token::Variable(_)) => (true, level),
