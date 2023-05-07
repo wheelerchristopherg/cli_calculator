@@ -50,7 +50,6 @@ pub fn evaluate_string_expression(
         Ok(parsed) => parsed,
         Err(e) => return Err(e),
     };
-    println!("tree: {}", tree);
 
     match tree.evaluate(env) {
         Ok(result) => {

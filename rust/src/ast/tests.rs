@@ -212,3 +212,10 @@ fn evaluate_paren_too_many_close_paren() {
     let error: String = AST::build_tree(&v).expect_err("The tree should fail to build.");
     assert_eq!(error, "Extra )");
 }
+
+#[test]
+fn no_operation_in_expression() {
+    let v = vec![Token::new_number("10.2"), Token::new_number("0.3")];
+    let error: String = AST::build_tree(&v).expect_err("The tree should fail to build.");
+    assert_eq!(error, "Invalid Expression");
+}

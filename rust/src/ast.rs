@@ -23,28 +23,6 @@ impl Display for WeightedToken {
     }
 }
 
-struct WeightedSliceWrapper<'a>(&'a [WeightedToken]);
-
-impl Display for WeightedSliceWrapper<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for t in self.0.iter() {
-            write!(f, "('{}', {})", t.token, t.weight)?
-        }
-        write!(f, "")
-    }
-}
-
-struct TokenSliceWrapper<'a>(&'a [Token]);
-
-impl Display for TokenSliceWrapper<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for t in self.0.iter() {
-            write!(f, " '{}' ", t)?
-        }
-        write!(f, "")
-    }
-}
-
 impl AST {
     fn new(value: Token, left: Option<Box<AST>>, right: Option<Box<AST>>) -> Box<Self> {
         let ast = AST { left, right, value };
@@ -137,7 +115,6 @@ impl AST {
     fn find_root_index(tokens: &[WeightedToken]) -> usize {
         let mut root_index = 0;
         let mut weight = i32::MIN;
-        println!("finding root of: {}", WeightedSliceWrapper(tokens));
         for (i, t) in tokens.iter().enumerate() {
             if let Some(x) = Self::get_token_weight(t) {
                 if x >= weight {
@@ -162,60 +139,47 @@ impl AST {
             end = e;
         }
 
-        let root_index = Self::find_root_index(tokens);
-        println!("root: {}, {}", root_index, tokens[root_index].token);
-        let mut left: Option<Box<Self>> = None;
-        let mut right: Option<Box<Self>> = None;
-
-        if root_index > 0 {
-            left = Some(
-                Self::build_tree_weighted(&tokens[..root_index])
-                    .map_err(|_| "Invalid Expression".to_string())?,
-            )
-        }
-        if root_index > 0 && root_index < tokens.len() - 1 {
-            right = Some(
-                Self::build_tree_weighted(&tokens[(root_index + 1)..end])
-                    .map_err(|_| "Invalid Expression".to_string())?,
-            )
-        }
-
-        Ok(Self::new(tokens[root_index].token.clone(), left, right))
-    }
-
-    fn _build_tree_weighted(tokens: &[WeightedToken]) -> Result<Box<Self>, String> {
-        let mut end = tokens.len();
-        if end == 0 {
-            Err("No tokens to parse")?
-        }
-        if let Some(e) = tokens.iter().position(|x| x.token == Token::EOL) {
-            end = e;
-        }
-
         let mut tree: Vec<Token> = vec![];
         let mut stack: Vec<(usize, usize)> = vec![];
         stack.push((0, end));
 
         while !stack.is_empty() {
             let (s, e) = stack.pop().unwrap();
-            println!("start: {}, end: {}", s, e);
             let root_index = s + Self::find_root_index(&tokens[s..e]);
-            println!("root_index: {}", root_index);
             let t = tokens[root_index].token.clone();
-            println!("token: {}", t);
             tree.push(t);
 
             if root_index > s && root_index < e - 1 {
                 stack.push(((root_index + 1), e));
+            }
+            if root_index > s {
                 stack.push((s, root_index));
             }
-
-            println!();
         }
-        println!("tree stack: {}", TokenSliceWrapper(&tree));
 
-        Err("Not Implemented".to_string())
-        // Ok(Self::new(tokens[root_index].token.clone(), left, right))
+        let mut resolved: Vec<Box<Self>> = vec![];
+        while !tree.is_empty() {
+            let t = tree.pop().expect("should contain valid token");
+            match t {
+                Token::Operator(_) => {
+                    let left = resolved.pop();
+                    let right = resolved.pop();
+                    if left.is_none() || right.is_none() {
+                        return Err("Invalid Expression".to_string());
+                    }
+                    resolved.push(Self::new(t, left, right));
+                }
+                _ => {
+                    resolved.push(Self::new_leaf(t));
+                }
+            }
+        }
+
+        if resolved.len() > 1 {
+            Err("Invalid Expression".to_string())
+        } else {
+            resolved.pop().ok_or("Invalid Expression".to_string())
+        }
     }
 
     fn process_parens(tokens: &[Token]) -> Result<Vec<WeightedToken>, String> {

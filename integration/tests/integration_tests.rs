@@ -31,7 +31,7 @@ fn test_cases(lang: Lang) {
             "Unexpected character \"(\" at position 8\n10 + 7.( + 2\n       ^\n",
         ),
         ("10.2", "x0 = 10.2\n"),
-        ("10.2+", "Invalid Expression\n"),
+        ("10.2+;+10.2", "Invalid Expression\nInvalid Expression\n"),
         ("1/0", "Divide by Zero\n"),
         ("1-+", "Invalid Expression\n"),
         ("10.0", "x0 = 10.0\n"),
