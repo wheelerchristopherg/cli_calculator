@@ -19,7 +19,7 @@ struct WeightedToken {
 
 impl Display for WeightedToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({},{})", self.token, self.weight)
+        write!(f, "('{}',{})", self.token, self.weight)
     }
 }
 
@@ -28,7 +28,7 @@ struct WeightedSliceWrapper<'a>(&'a [WeightedToken]);
 impl Display for WeightedSliceWrapper<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for t in self.0.iter() {
-            write!(f, "({}, {})", t.token, t.weight)?
+            write!(f, "('{}', {})", t.token, t.weight)?
         }
         write!(f, "")
     }
@@ -39,7 +39,7 @@ struct TokenSliceWrapper<'a>(&'a [Token]);
 impl Display for TokenSliceWrapper<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for t in self.0.iter() {
-            write!(f, " {} ", t)?
+            write!(f, " '{}' ", t)?
         }
         write!(f, "")
     }
