@@ -23,6 +23,26 @@ impl Display for WeightedToken {
     }
 }
 
+impl WeightedToken {
+    #[allow(dead_code)]
+    fn print_slice(tokens: &[WeightedToken]) {
+        for token in tokens.iter() {
+            print!("{} ", token);
+        }
+        println!();
+    }
+}
+
+impl Token {
+    #[allow(dead_code)]
+    fn print_slice(tokens: &[Token]) {
+        for token in tokens.iter() {
+            print!("{} ", token);
+        }
+        println!();
+    }
+}
+
 impl AST {
     fn new(value: Token, left: Option<Box<AST>>, right: Option<Box<AST>>) -> Box<Self> {
         let ast = AST { left, right, value };
@@ -143,7 +163,9 @@ impl AST {
     }
 
     pub fn build_tree(tokens: &[Token]) -> Result<Box<Self>, String> {
-        Self::build_tree_weighted(&Self::process_parens(tokens)?)
+        let tokens = Self::handle_unary_minus(tokens)?;
+        // Token::print_slice(&tokens);
+        Self::build_tree_weighted(&Self::process_parens(&tokens)?)
     }
 
     fn build_tree_weighted(tokens: &[WeightedToken]) -> Result<Box<Self>, String> {
@@ -263,6 +285,109 @@ impl AST {
             Ordering::Less => Err("Missing )".to_string()),
             Ordering::Equal => Ok(weighted_tokens),
         }
+    }
+
+    fn handle_unary_minus(tokens: &[Token]) -> Result<Vec<Token>, String> {
+        let mut tokens_vec: Vec<Token> = tokens.to_vec();
+        if tokens.len() == 1 {
+            return Ok(tokens_vec);
+        } else if tokens.len() == 2 {
+            tokens_vec.insert(0, Token::InvalidToken("padding".to_string()));
+        }
+
+        let mut new_tokens: Vec<Token> = vec![];
+
+        let mut skip_next = false;
+        for (i, token_window) in tokens_vec.windows(3).enumerate() {
+            if skip_next {
+                skip_next = false;
+                continue;
+            }
+
+            match (
+                i,
+                token_window[0].clone(),
+                token_window[1].clone(),
+                token_window[2].clone(),
+            ) {
+                (0, Token::Operator(Op::Sub), Token::Paren(ParenType::OpenParen), _) => {
+                    new_tokens.push(Token::new_number("-1"));
+                    new_tokens.push(token_window[1].clone())
+                }
+                (0, Token::Operator(Op::Sub), Token::Number(Num::Float(n)), _) => {
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (0, Token::Operator(Op::Sub), Token::Number(Num::Integer(n)), _) => {
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (
+                    0,
+                    Token::InvalidToken(_),
+                    Token::Operator(Op::Sub),
+                    Token::Paren(ParenType::OpenParen),
+                ) => {
+                    new_tokens.push(Token::new_number("-1"));
+                }
+                (
+                    0,
+                    Token::InvalidToken(_),
+                    Token::Operator(Op::Sub),
+                    Token::Number(Num::Float(n)),
+                ) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (
+                    0,
+                    Token::InvalidToken(_),
+                    Token::Operator(Op::Sub),
+                    Token::Number(Num::Integer(n)),
+                ) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (0, Token::InvalidToken(_), _, _) => {
+                    new_tokens.push(token_window[1].clone());
+                }
+                (0, _, _, _) => {
+                    new_tokens.push(token_window[0].clone());
+                    new_tokens.push(token_window[1].clone());
+                }
+                (
+                    _,
+                    Token::Operator(_) | Token::Paren(ParenType::OpenParen),
+                    Token::Operator(Op::Sub),
+                    Token::Number(Num::Float(n)),
+                ) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (
+                    _,
+                    Token::Operator(_) | Token::Paren(ParenType::OpenParen),
+                    Token::Operator(Op::Sub),
+                    Token::Number(Num::Integer(n)),
+                ) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (
+                    _,
+                    Token::Operator(_) | Token::Paren(ParenType::OpenParen),
+                    Token::Operator(Op::Sub),
+                    Token::Paren(ParenType::OpenParen),
+                ) => {
+                    new_tokens.push(Token::new_number("-1"));
+                }
+                _ => new_tokens.push(token_window[1].clone()),
+            }
+        }
+        if !skip_next {
+            if let Some(last) = tokens_vec.last() {
+                new_tokens.push(last.clone());
+            }
+        }
+        Ok(new_tokens)
     }
 }
 
