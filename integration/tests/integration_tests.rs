@@ -51,6 +51,7 @@ fn test_cases(lang: Lang) {
             "Invalid Expression\nInvalid Expression\nInvalid Expression\nInvalid Expression\nInvalid Expression\n"
         ),
         ("(10 * ", "Missing )\n"),
+        ("10+-1", "x0 = 9.0\n"),
     ];
     run_tests(input_expected, &lang);
 }
