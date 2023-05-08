@@ -23,26 +23,6 @@ impl Display for WeightedToken {
     }
 }
 
-impl WeightedToken {
-    #[allow(dead_code)]
-    fn print_slice(tokens: &[WeightedToken]) {
-        for token in tokens.iter() {
-            print!("{} ", token);
-        }
-        println!();
-    }
-}
-
-impl Token {
-    #[allow(dead_code)]
-    fn print_slice(tokens: &[Token]) {
-        for token in tokens.iter() {
-            print!("{} ", token);
-        }
-        println!();
-    }
-}
-
 impl AST {
     fn new(value: Token, left: Option<Box<AST>>, right: Option<Box<AST>>) -> Box<Self> {
         let ast = AST { left, right, value };
@@ -164,7 +144,6 @@ impl AST {
 
     pub fn build_tree(tokens: &[Token]) -> Result<Box<Self>, String> {
         let tokens = Self::handle_unary_minus(tokens)?;
-        // Token::print_slice(&tokens);
         Self::build_tree_weighted(&Self::process_parens(&tokens)?)
     }
 
@@ -407,7 +386,7 @@ impl AST {
                     new_tokens.push(v);
                     new_tokens.push(Token::new_paren(")"));
                 }
-                _ => new_tokens.push(token_window[1].clone()),
+                (_, _, t, _) => new_tokens.push(t),
             }
         }
         if !skip_next {
