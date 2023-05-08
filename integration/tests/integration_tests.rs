@@ -52,6 +52,7 @@ fn test_cases(lang: Lang) {
         ),
         ("(10 * ", "Missing )\n"),
         ("10+-1;10 * -(3 + 2);-5;-(10 / 2); 10 / -2", "x0 = 9.0\nx1 = -50.0\nx2 = -5.0\nx3 = -5.0\nx4 = -5.0\n"),
+        ("10 + 3; 5 + -x0;-x1", "x0 = 13.0\nx1 = -8.0\nx2 = 8.0\n")
     ];
     run_tests(input_expected, &lang);
 }

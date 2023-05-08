@@ -320,6 +320,13 @@ impl AST {
                 (0, Token::Operator(Op::Sub), Token::Number(Num::Integer(n)), _) => {
                     new_tokens.push(Token::new_number(&format!("-{}", n)));
                 }
+                (0, Token::Operator(Op::Sub), v @ Token::Variable(_), _) => {
+                    new_tokens.push(Token::new_paren("("));
+                    new_tokens.push(Token::new_number("-1"));
+                    new_tokens.push(Token::new_op("*"));
+                    new_tokens.push(v);
+                    new_tokens.push(Token::new_paren(")"));
+                }
                 (
                     0,
                     Token::InvalidToken(_),
@@ -345,6 +352,14 @@ impl AST {
                 ) => {
                     skip_next = true;
                     new_tokens.push(Token::new_number(&format!("-{}", n)));
+                }
+                (0, Token::InvalidToken(_), Token::Operator(Op::Sub), v @ Token::Variable(_)) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_paren("("));
+                    new_tokens.push(Token::new_number("-1"));
+                    new_tokens.push(Token::new_op("*"));
+                    new_tokens.push(v);
+                    new_tokens.push(Token::new_paren(")"));
                 }
                 (0, Token::InvalidToken(_), _, _) => {
                     new_tokens.push(token_window[1].clone());
@@ -378,6 +393,19 @@ impl AST {
                     Token::Paren(ParenType::OpenParen),
                 ) => {
                     new_tokens.push(Token::new_number("-1"));
+                }
+                (
+                    _,
+                    Token::Operator(_) | Token::Paren(ParenType::OpenParen),
+                    Token::Operator(Op::Sub),
+                    v @ Token::Variable(_),
+                ) => {
+                    skip_next = true;
+                    new_tokens.push(Token::new_paren("("));
+                    new_tokens.push(Token::new_number("-1"));
+                    new_tokens.push(Token::new_op("*"));
+                    new_tokens.push(v);
+                    new_tokens.push(Token::new_paren(")"));
                 }
                 _ => new_tokens.push(token_window[1].clone()),
             }
