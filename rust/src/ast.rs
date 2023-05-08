@@ -33,47 +33,71 @@ impl AST {
         Self::new(value, None, None)
     }
 
-    pub fn evaluate(&self, env: &HashMap<String, Box<AST>>) -> Result<f64, String> {
-        let result = match &self.value {
-            Token::Number(num) => self.evaluate_number(num)?,
-            Token::Operator(oper) => self.evaluate_operator(oper, env)?,
-            Token::Paren(_) => Err("Parenthetical expressions are not yet implemented")?,
-            Token::Variable(var) => self.evaluate_variable(var, env)?,
-            x => Err(format!("Cannot evaluate {}", x))?,
-        };
-        Ok(result)
+    pub fn evaluate(ast: Box<Self>, env: &HashMap<String, f64>) -> Result<f64, String> {
+        let mut stack = vec![ast];
+        let mut resolve_stack: Vec<f64> = vec![];
+        while !stack.is_empty() {
+            let mut item = stack.pop().unwrap();
+            match &item.value {
+                Token::Operator(oper) => {
+                    let next: Box<Self>;
+                    if let Some(left) = item.left {
+                        next = left;
+                        item.left = None;
+                        stack.push(item);
+                        stack.push(next);
+                    } else if let Some(right) = item.right {
+                        next = right;
+                        item.right = None;
+                        stack.push(item);
+                        stack.push(next);
+                    } else {
+                        let right = resolve_stack.pop();
+                        let left = resolve_stack.pop();
+                        if left.is_some() && right.is_some() {
+                            resolve_stack.push(Self::evaluate_operator(
+                                oper,
+                                left.unwrap(),
+                                right.unwrap(),
+                            )?);
+                        } else {
+                            return Err("Invalid Expression".to_string());
+                        }
+                    }
+                }
+                Token::Variable(var) => {
+                    resolve_stack.push(Self::evaluate_variable(var, env)?);
+                }
+                Token::Number(num) => {
+                    resolve_stack.push(Self::evaluate_number(num)?);
+                }
+                x => Err(format!("Cannot evaluate {}", x))?,
+            }
+        }
+
+        if resolve_stack.len() != 1 {
+            Err("Invalid Expression".to_string())
+        } else {
+            resolve_stack.pop().ok_or("Invalid Expression".to_string())
+        }
     }
 
-    fn evaluate_operator(&self, oper: &Op, env: &HashMap<String, Box<AST>>) -> Result<f64, String> {
-        let l = self
-            .left
-            .as_deref()
-            .ok_or_else(|| "Invalid Expression".to_owned())?
-            .evaluate(env)?;
-        let r = self
-            .right
-            .as_deref()
-            .ok_or_else(|| "Invalid Expression".to_owned())?
-            .evaluate(env)?;
+    fn evaluate_operator(oper: &Op, left: f64, right: f64) -> Result<f64, String> {
         let result = match oper {
-            Op::Add => l + r,
-            Op::Sub => l - r,
-            Op::Mult => l * r,
+            Op::Add => left + right,
+            Op::Sub => left - right,
+            Op::Mult => left * right,
             Op::Div => {
-                if r == 0.0 {
+                if right == 0.0 {
                     Err("Divide by Zero".to_owned())?
                 }
-                l / r
+                left / right
             }
         };
         Ok(result)
     }
 
-    fn evaluate_number(&self, num: &Num) -> Result<f64, String> {
-        if self.left.is_some() || self.right.is_some() {
-            return Err("Invalid Expression".to_string());
-        }
-
+    fn evaluate_number(num: &Num) -> Result<f64, String> {
         let result = match num {
             Num::Float(x) => *x,
             Num::Integer(x) => *x as f64,
@@ -81,17 +105,9 @@ impl AST {
         Ok(result)
     }
 
-    fn evaluate_variable(
-        &self,
-        var: &String,
-        env: &HashMap<String, Box<AST>>,
-    ) -> Result<f64, String> {
-        if self.left.is_some() || self.right.is_some() {
-            return Err("Invalid Expression".to_string());
-        }
-
-        if let Some(value) = env.get(var) {
-            value.evaluate(env)
+    fn evaluate_variable(var: &String, env: &HashMap<String, f64>) -> Result<f64, String> {
+        if let Some(&value) = env.get(var) {
+            Ok(value)
         } else {
             Err(format!("Unknown Variable: {}", var))
         }

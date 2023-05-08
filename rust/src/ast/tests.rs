@@ -9,7 +9,7 @@ fn simple_evaluate() {
     let root = AST::new(Token::new_op("/"), Some(left), Some(right));
 
     let env = HashMap::new();
-    let val = root.evaluate(&env).expect("should be 9.5");
+    let val = AST::evaluate(root, &env).expect("should be 9.5");
     assert_eq!(val, 9.5);
 }
 
@@ -28,7 +28,7 @@ fn complex_evaluate() {
     let root = AST::new(Token::new_op("-"), Some(left), Some(right));
 
     let env = HashMap::new();
-    let val = root.evaluate(&env).expect("should be 7.0");
+    let val = AST::evaluate(root, &env).expect("should be 7.0");
     assert_eq!(val, -3.5);
 }
 
@@ -36,9 +36,7 @@ fn complex_evaluate() {
 fn no_left_node() {
     let root = AST::new(Token::new_op("/"), None, None);
     let env = HashMap::new();
-    let error = root
-        .evaluate(&env)
-        .expect_err("should throw 'Invalid Expression'");
+    let error = AST::evaluate(root, &env).expect_err("should throw 'Invalid Expression'");
     assert_eq!(error, "Invalid Expression");
 }
 
@@ -47,9 +45,7 @@ fn no_right_node() {
     let left = AST::new(Token::new_number("19"), None, None);
     let root = AST::new(Token::new_op("/"), Some(left), None);
     let env = HashMap::new();
-    let error = root
-        .evaluate(&env)
-        .expect_err("should throw 'Invalid Expression'");
+    let error = AST::evaluate(root, &env).expect_err("should throw 'Invalid Expression'");
     assert_eq!(error, "Invalid Expression");
 }
 
@@ -59,9 +55,7 @@ fn divide_by_zero() {
     let right = AST::new(Token::new_number("0"), None, None);
     let root = AST::new(Token::new_op("/"), Some(left), Some(right));
     let env = HashMap::new();
-    let error = root
-        .evaluate(&env)
-        .expect_err("should throw 'Divide by Zero'");
+    let error = AST::evaluate(root, &env).expect_err("should throw 'Divide by Zero'");
     assert_eq!(error, "Divide by Zero");
 }
 
@@ -83,9 +77,7 @@ fn build_tree() {
     let env = HashMap::new();
     let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
     println!("AST: {}", root);
-    let result = root
-        .evaluate(&env)
-        .expect("the result should be a real value");
+    let result = AST::evaluate(root, &env).expect("the result should be a real value");
     assert_eq!(result, -4.609999999999999);
 }
 
@@ -94,7 +86,7 @@ fn evaluate_single_number() {
     let v = vec![Token::new_number("1.24"), Token::EOL];
     let env = HashMap::new();
     let root: Box<AST> = AST::build_tree(&v).expect("the tree should build successfully");
-    let result = root.evaluate(&env).expect("should be a real value");
+    let result = AST::evaluate(root, &env).expect("should be a real value");
     assert_eq!(result, 1.24);
 }
 
@@ -136,28 +128,21 @@ fn evaluate_paren() {
     let env = HashMap::new();
     let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
     println!("AST: {}", root);
-    let result = root
-        .evaluate(&env)
-        .expect("the result should be a real value");
+    let result = AST::evaluate(root, &env).expect("the result should be a real value");
     assert_eq!(result, -26.0);
 }
 
 #[test]
 fn evaluate_variables() {
     let mut env = HashMap::new();
-    env.insert(
-        "x0".to_owned(),
-        AST::new(Token::new_number("9.2"), None, None),
-    );
+    env.insert("x0".to_owned(), 9.2);
     let v = vec![
         Token::new_variable("x0"),
         Token::new_op("+"),
         Token::new_number("10"),
     ];
     let root: Box<AST> = AST::build_tree(&v).expect("The tree should build successfully.");
-    let result = root
-        .evaluate(&env)
-        .expect("the result should be a real value");
+    let result = AST::evaluate(root, &env).expect("the result should be a real value");
     assert_eq!(result, 19.2);
 }
 

@@ -4,6 +4,7 @@ pub mod tokens;
 
 use std::{
     collections::HashMap,
+    f64::consts::PI,
     io::{self, Write},
 };
 
@@ -12,8 +13,8 @@ use lexical_analyzer::TokenParser;
 use tokens::Token;
 
 pub fn main_loop() {
-    let mut env = HashMap::new();
-    env.insert("pi".to_owned(), AST::new_leaf(Token::new_number("3.14159")));
+    let mut env: HashMap<String, f64> = HashMap::new();
+    env.insert("pi".to_owned(), PI);
     let mut result_index = 0;
     loop {
         if let Ok(expression) = read_line("> ") {
@@ -38,7 +39,7 @@ pub fn main_loop() {
 
 pub fn evaluate_string_expression(
     expression: &str,
-    env: &mut HashMap<String, Box<AST>>,
+    env: &mut HashMap<String, f64>,
     index: i32,
 ) -> Result<String, String> {
     let parsed_tokens: Vec<Token> = match parse_tokens(expression) {
@@ -51,10 +52,9 @@ pub fn evaluate_string_expression(
         Err(e) => return Err(e),
     };
 
-    match tree.evaluate(env) {
+    match AST::evaluate(tree, env) {
         Ok(result) => {
-            let result_ast = AST::new_leaf(Token::new_number(&result.to_string()));
-            env.insert(format!("x{}", index), result_ast);
+            env.insert(format!("x{}", index), result);
             if result == result.floor() {
                 Ok(format!("x{} = {}.0", index, result))
             } else {
