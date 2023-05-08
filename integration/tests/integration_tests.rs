@@ -38,7 +38,7 @@ fn test_cases(lang: Lang) {
         ("10 * 2.0", "x0 = 20.0\n"),
         ("10", "x0 = 10.0\n"),
         ("10/2+3*4-6/3", "x0 = 15.0\n"),
-        ("10.2.0", "Invalid Expression\n"),
+        ("10.2.0;10.2.3.4.5.6.7.8", "Invalid Expression\nInvalid Expression\n"),
         ("(10/ 2.5;10/ 2.5)", "Missing )\nExtra )\n"),
         (
             "10 + 2;x0 / 2);x1 / 2; x0 / 2;10 = 2",
@@ -68,7 +68,7 @@ fn run_tests(input_expected: Vec<(&str, &str)>, lang: &Lang) {
     for ((input, expected), output) in input_expected.iter().zip(results.iter()) {
         println!("{}", line);
         println!("input: {input:?}");
-        println!("output: {output:?}");
+        println!("output:   {output:?}");
         println!("expected: {expected:?}");
         if output != expected {
             println!("\x1b[0;31mX\x1b[0m");
