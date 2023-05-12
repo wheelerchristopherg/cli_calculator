@@ -204,3 +204,151 @@ fn no_operation_in_expression() {
     let error: String = AST::build_tree(&v).expect_err("The tree should fail to build.");
     assert_eq!(error, "Invalid Expression");
 }
+
+#[test]
+fn negative_numbers_at_start_of_expression() {
+    let v = vec![Token::new_op("-"), Token::new_number("10")];
+    let tree = AST::build_tree(&v).expect("expect tree with '-10' to build");
+    let env = HashMap::new();
+    let result = AST::evaluate(tree, &env).expect("expect result -10");
+    assert_eq!(result, -10.0);
+
+    let v = vec![Token::new_op("-"), Token::new_variable("var")];
+    let tree = AST::build_tree(&v).expect("expect tree with '-var' to build");
+    let mut env = HashMap::new();
+    env.insert("var".to_string(), 24.1);
+    let result = AST::evaluate(tree, &env).expect("expect result -24.1");
+    assert_eq!(result, -24.1);
+
+    let v = vec![
+        Token::new_op("-"),
+        Token::new_paren("("),
+        Token::new_number("267"),
+        Token::new_paren(")"),
+    ];
+    let tree = AST::build_tree(&v).expect("expect tree with '-(267)' to build");
+    let env = HashMap::new();
+    let result = AST::evaluate(tree, &env).expect("expect result -267");
+    assert_eq!(result, -267.0);
+
+    let v = vec![
+        Token::new_op("-"),
+        Token::new_paren("("),
+        Token::new_number("25"),
+        Token::new_op("*"),
+        Token::new_number("4"),
+        Token::new_paren(")"),
+    ];
+    let tree = AST::build_tree(&v).expect("expect tree with '-(25 * 4)' to build");
+    let env = HashMap::new();
+    let result = AST::evaluate(tree, &env).expect("expect result -100");
+    assert_eq!(result, -100.0);
+}
+
+#[test]
+fn negative_numbers_after_operator() {
+    for (i, operator) in [
+        Token::new_op("+"),
+        Token::new_op("-"),
+        Token::new_op("*"),
+        Token::new_op("/"),
+    ]
+    .iter()
+    .enumerate()
+    {
+        let v = vec![
+            Token::new_number("7"),
+            operator.clone(),
+            Token::new_op("-"),
+            Token::new_number("10"),
+        ];
+        let tree = AST::build_tree(&v).expect("expect tree to build for 7 _ -10");
+        let env = HashMap::new();
+        let result0 = AST::evaluate(tree, &env).expect("expect numerical result");
+
+        let v = vec![
+            Token::new_number("2"),
+            operator.clone(),
+            Token::new_op("-"),
+            Token::new_variable("var"),
+        ];
+        let tree = AST::build_tree(&v).expect("expect tree for 2 _ -var to build");
+        let mut env = HashMap::new();
+        env.insert("var".to_string(), 24.1);
+        let result1 = AST::evaluate(tree, &env).expect("expect numerical result");
+
+        let v = vec![
+            Token::new_number("5"),
+            operator.clone(),
+            Token::new_op("-"),
+            Token::new_paren("("),
+            Token::new_number("267"),
+            Token::new_paren(")"),
+        ];
+        let tree = AST::build_tree(&v).expect("expect tree for 5 _ -(267) to build");
+        let env = HashMap::new();
+        let result2 = AST::evaluate(tree, &env).expect("expect numerical result");
+
+        let v = vec![
+            Token::new_number("3"),
+            operator.clone(),
+            Token::new_op("-"),
+            Token::new_paren("("),
+            Token::new_number("25"),
+            Token::new_op("*"),
+            Token::new_number("4"),
+            Token::new_paren(")"),
+        ];
+        let tree = AST::build_tree(&v).expect("expect tree for 3 _ -(25 * 4) to build");
+        let env = HashMap::new();
+        let result3 = AST::evaluate(tree, &env).expect("expect numerical result");
+
+        match i {
+            0 => {
+                println!("Addition");
+                assert_eq!(result0, 7.0 + -10.0);
+                println!("result0 passed");
+                assert_eq!(result1, 2.0 + -24.1);
+                println!("result1 passed");
+                assert_eq!(result2, 5.0 + -(267.0));
+                println!("result2 passed");
+                assert_eq!(result3, 3.0 + -(25.0 * 4.0));
+                println!("result3 passed");
+            }
+            1 => {
+                println!("Subtraction");
+                assert_eq!(result0, 7.0 - -10.0);
+                println!("result0 passed");
+                assert_eq!(result1, 2.0 - -24.1);
+                println!("result1 passed");
+                assert_eq!(result2, 5.0 - -(267.0));
+                println!("result2 passed");
+                assert_eq!(result3, 3.0 - -(25.0 * 4.0));
+                println!("result3 passed");
+            }
+            2 => {
+                println!("Multiplication");
+                assert_eq!(result0, 7.0 * -10.0);
+                println!("result0 passed");
+                assert_eq!(result1, 2.0 * -24.1);
+                println!("result1 passed");
+                assert_eq!(result2, 5.0 * -(267.0));
+                println!("result2 passed");
+                assert_eq!(result3, 3.0 * -(25.0 * 4.0));
+                println!("result3 passed");
+            }
+            3 => {
+                println!("Division");
+                assert_eq!(result0, 7.0 / -10.0);
+                println!("result0 passed");
+                assert_eq!(result1, 2.0 / -24.1);
+                println!("result1 passed");
+                assert_eq!(result2, 5.0 / -(267.0));
+                println!("result2 passed");
+                assert_eq!(result3, 3.0 / -(25.0 * 4.0));
+                println!("result3 passed");
+            }
+            _ => (),
+        };
+    }
+}
